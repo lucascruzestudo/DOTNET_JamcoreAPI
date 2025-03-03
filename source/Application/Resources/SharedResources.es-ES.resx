@@ -76,4 +76,7 @@
         <p>Si tiene alguna pregunta o necesita asistencia, no dude en ponerse en contacto con nuestro equipo de soporte.</p>]]>
     </value>
   </data>
+  <data name="UploadFailed" xml:space="preserve">
+    <value>La carga del arquivo falló.</value>
+  </data>
 </root>

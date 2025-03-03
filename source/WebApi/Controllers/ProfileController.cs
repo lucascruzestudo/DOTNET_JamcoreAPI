@@ -17,8 +17,21 @@ public class ProfileController(INotificationHandler<DomainNotification> notifica
     [HttpPut]
     [SwaggerOperation(Summary = "Upsert a user profile.")]
     [ProducesResponseType(typeof(UpsertProfileCommandResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> UpsertProfile([FromBody] UpsertProfileCommandRequest request)
+    public async Task<IActionResult> UpsertProfile([FromForm] UpsertProfileCommandRequest request, IFormFile? image = null)
     {
-        return Response(await _mediatorHandler.Send(new UpsertProfileCommand(request)));
+        byte[] imageBytes = [];
+
+        if (image != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await image.CopyToAsync(memoryStream);
+            imageBytes = memoryStream.ToArray();
+        }
+
+        var command = new UpsertProfileCommand(request, imageBytes);
+        var response = await _mediatorHandler.Send(command);
+
+        return Response(response);
     }
+
 }

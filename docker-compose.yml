@@ -36,6 +36,9 @@ services:
       Email__Username: "${EMAIL_USERNAME}"
       Email__Password: "${EMAIL_PASSWORD}"
       Email__EnableSsl: "${EMAIL_ENABLESSL}"
+      Supabase__Url: "${SUPABASE_URL}"
+      Supabase__Key: "${SUPABASE_KEY}"
+      Supabase__Bucket: "${SUPABASE_BUCKET_NAME}"
     depends_on:
       - postgres
       - redis

@@ -11,6 +11,7 @@ using Project.Infrastructure.Authentication;
 using Project.Domain.Interfaces.Services;
 using Project.Infrastructure.Email;
 using Project.Infrastructure.Cache;
+using Project.Infrastructure.Supabase;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -69,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IRedisService, RedisService>();
+        services.AddScoped<ISupabaseService, SupabaseService>();
 
         services.AddAuthorizationBuilder();
 
