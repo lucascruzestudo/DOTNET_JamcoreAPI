@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="RequiredField" xml:space="preserve">
+    <value>{0} es requerido.</value>
+  </data>
+  <data name="FieldNotFound" xml:space="preserve">
+    <value>{0} no fue encontrado.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>{0} no es válido.</value>
+  </data>
+  <data name="MinLength" xml:space="preserve">
+    <value>{0} debe tener al menos {1} caracteres.</value>
+  </data>
+  <data name="MaxLength" xml:space="preserve">
+    <value>{0} debe tener un máximo de {1} caracteres.</value>
+  </data>
+  <data name="PasswordMinLength" xml:space="preserve">
+    <value>La contraseña debe tener al menos {0} caracteres.</value>
+  </data>
+  <data name="PasswordUppercase" xml:space="preserve">
+    <value>La contraseña debe contener al menos una letra mayúscula.</value>
+  </data>
+  <data name="PasswordLowercase" xml:space="preserve">
+    <value>La contraseña debe contener al menos una letra minúscula.</value>
+  </data>
+  <data name="PasswordNumber" xml:space="preserve">
+    <value>La contraseña debe contener al menos un número.</value>
+  </data>
+  <data name="PasswordSpecialCharacter" xml:space="preserve">
+    <value>La contraseña debe contener al menos un carácter especial.</value>
+  </data>
+  <data name="LoginInvalidCredentials" xml:space="preserve">
+    <value>Nombre de usuario o contraseña no válidos.</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Su acción se ha completado con éxito.</value>
+  </data>
+  <data name="RegisterUsernameExists" xml:space="preserve">
+    <value>El nombre de usuario ya existe.</value>
+  </data>
+  <data name="RegisterEmailExists" xml:space="preserve">
+    <value>El email ya existe.</value>
+  </data>
+  <data name="InvalidToken" xml:space="preserve">
+    <value>El token no es valido.</value>
+  </data>
+  <data name="InvalidUser" xml:space="preserve">
+    <value>El usuario no es valido.</value>
+  </data>
+  <data name="InvalidUrl" xml:space="preserve">
+    <value>La dirección web {0} no es válida.</value>
+  </data>
+    <data name="ConfirmEmailSubject" xml:space="preserve">
+      <value>Confirmación de Cuenta</value>
+  </data>
+  <data name="ConfirmEmailBody" xml:space="preserve">
+    <value>
+        <![CDATA[<h1>Estás a punto de completar tu registro, @{0}!</h1>
+        <p>Gracias por registrarte con nosotros.</p>
+        <p>Por favor haga clic en el enlace a continuación para confirmar su dirección de correo electrónico:</p>
+        <a href='{1}'>Confirmar correo electrónico</a>
+        <br></br>
+        <p>El enlace de confirmación expirará en {2} minutos.</p>
+        <p>Si no te registraste para esta cuenta, por favor ignora este correo electrónico.</p>]]>
+    </value>
+  </data>
+  <data name="AccountConfirmedSubject" xml:space="preserve">
+      <value>Cuenta Confirmada</value>
+  </data>
+  <data name="AccountConfirmedBody" xml:space="preserve">
+    <value>
+        <![CDATA[<h1>¡Bienvenido(a) @{0}!</h1>
+        <p>Gracias por confirmar su dirección de correo electrónico. Su cuenta ya está completamente activada.</p>
+        <p>Ahora puede acceder a su cuenta e iniciar a utilizar nuestra plataforma.</p>
+        <p>Si tiene alguna pregunta o necesita asistencia, no dude en ponerse en contacto con nuestro equipo de soporte.</p>]]>
+    </value>
+  </data>
+</root>

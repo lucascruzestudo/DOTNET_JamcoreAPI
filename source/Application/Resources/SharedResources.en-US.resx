@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="RequiredField" xml:space="preserve">
+    <value>{0} is required.</value>
+  </data>
+  <data name="FieldNotFound" xml:space="preserve">
+    <value>{0} could not be found.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>{0} is invalid.</value>
+  </data>
+  <data name="MinLength" xml:space="preserve">
+    <value>{0} must be at least {1} characters long.</value>
+  </data>
+  <data name="MaxLength" xml:space="preserve">
+    <value>{0} must be no longer than {1} characters.</value>
+  </data>
+  <data name="PasswordMinLength" xml:space="preserve">
+    <value>Password must be at least {0} characters long.</value>
+  </data>
+  <data name="PasswordUppercase" xml:space="preserve">
+    <value>Password must contain at least one uppercase letter.</value>
+  </data>
+  <data name="PasswordLowercase" xml:space="preserve">
+    <value>Password must contain at least one lowercase letter.</value>
+  </data>
+  <data name="PasswordNumber" xml:space="preserve">
+    <value>Password must contain at least one number.</value>
+  </data>
+  <data name="PasswordSpecialCharacter" xml:space="preserve">
+    <value>Password must contain at least one special character.</value>
+  </data>
+  <data name="LoginInvalidCredentials" xml:space="preserve">
+    <value>Invalid username or password.</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Your action was completed successfully.</value>
+  </data>
+  <data name="RegisterUsernameExists" xml:space="preserve">
+    <value>Username already exists.</value>
+  </data>
+  <data name="RegisterEmailExists" xml:space="preserve">
+    <value>Email already exists.</value>
+  </data>
+  <data name="InvalidToken" xml:space="preserve">
+    <value>Invalid token.</value>
+  </data>
+  <data name="InvalidUser" xml:space="preserve">
+    <value>Invalid user.</value>
+  </data>
+  <data name="InvalidUrl" xml:space="preserve">
+    <value>Invalid URL {0}.</value>
+  </data>
+  <data name="ConfirmEmailSubject" xml:space="preserve">
+      <value>Account Confirmation</value>
+  </data>
+  <data name="ConfirmEmailBody" xml:space="preserve">
+      <value>
+          <![CDATA[<h1>You're almost done with your registration, @{0}!</h1>
+          <p>Thank you for registering with us.</p>
+          <p>Please click the link below to confirm your email address:</p>
+          <a href='{1}'>Confirm Email</a>
+          <br></br>
+          <p>The confirmation link will expire in {2} minutes.</p>
+          <p>If you did not register for this account, please ignore this email.</p>]]>
+      </value>
+  </data>
+  <data name="AccountConfirmedSubject" xml:space="preserve">
+      <value>Account Confirmed</value>
+  </data>
+  <data name="AccountConfirmedBody" xml:space="preserve">
+    <value>
+        <![CDATA[<h1>Welcome @{0}!</h1>
+        <p>Thank you for confirming your email address. Your account is now fully activated.</p>
+        <p>You can now access your account and start using our platform.</p>
+        <p>If you have any questions or need assistance, feel free to contact our support team.</p>]]>
+    </value>
+  </data>
+</root>
