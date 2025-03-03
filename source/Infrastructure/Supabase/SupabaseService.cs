@@ -19,12 +19,12 @@ namespace Project.Infrastructure.Supabase
             _supabase = new Client(url!, key, options);
         }
 
-        public async Task<string> UploadFileAsync(byte[] imageBytes, string fileName)
+        public async Task<string> UploadFileAsync(byte[] imageBytes, string fileName, string bucketName)
         {
 
             await _supabase.InitializeAsync();
             var storage = _supabase.Storage;
-            var bucket = storage.From(_bucketName);
+            var bucket = storage.From(bucketName);
 
             using var stream = new MemoryStream(imageBytes);
             var response = await bucket.Upload(imageBytes, fileName);

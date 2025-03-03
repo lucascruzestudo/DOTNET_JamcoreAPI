@@ -74,7 +74,7 @@ namespace Project.Application.Features.Email.Commands.UpsertProfile
                     }
                 }
 
-                string fileUrl = await _supabaseService.UploadFileAsync(command.Image, fileName);
+                string fileUrl = await _supabaseService.UploadFileAsync(command.Image, fileName, "jamcore-profiles");
 
                 if (string.IsNullOrEmpty(fileUrl))
                 {
