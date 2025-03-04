@@ -87,5 +87,8 @@
   <data name="TrackFileImageRequired" xml:space="preserve">
     <value>O arquivo de imagem recebido não era um arquivo de imagem válido.</value>
   </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>Recurso não encontrado.</value>
+  </data>
 </root>
 

@@ -31,8 +31,18 @@ namespace Project.Infrastructure.Data.Configurations
                             .IsRequired()
                             .HasMaxLength(500);
 
+                     builder.Property(t => t.AudioFileName)
+                            .HasColumnName("TX_AUDIOFILENAME")
+                            .IsRequired()
+                            .HasMaxLength(500);
+
                      builder.Property(t => t.ImageUrl)
                             .HasColumnName("TX_IMAGEURL")
+                            .IsRequired()
+                            .HasMaxLength(500);
+                     
+                     builder.Property(t => t.ImageFileName)
+                            .HasColumnName("TX_IMAGEFILENAME")
                             .IsRequired()
                             .HasMaxLength(500);
 

@@ -21,6 +21,7 @@ namespace Project.Application.Features.Commands.UploadTrack
         private readonly CultureLocalizer _localizer;
         private readonly IUser _user;
         private readonly IRepositoryBase<User> _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public UploadTrackCommandHandler(
             IMediator mediator,
@@ -30,7 +31,8 @@ namespace Project.Application.Features.Commands.UploadTrack
             IRepositoryBase<Tag> tagRepository,
             CultureLocalizer localizer,
             IUser user,
-            IRepositoryBase<User> userRepository)
+            IRepositoryBase<User> userRepository,
+            IUnitOfWork unitOfWork)
         {
             _mediator = mediator;
             _supabaseService = supabaseService;
@@ -40,6 +42,7 @@ namespace Project.Application.Features.Commands.UploadTrack
             _tagRepository = tagRepository;
             _user = user;
             _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<UploadTrackCommandResponse?> Handle(UploadTrackCommand command, CancellationToken cancellationToken)
@@ -61,6 +64,8 @@ namespace Project.Application.Features.Commands.UploadTrack
             };
 
             var createdTrack = _trackRepository.Add(track);
+            _unitOfWork.Commit();
+
             var trackId = createdTrack.Id;
             string? uploadedImageUrl = null;
             string? uploadedImageFileName = null;
@@ -86,6 +91,7 @@ namespace Project.Application.Features.Commands.UploadTrack
                                 TagId = existingTag.Id
                             };
                             _trackTagRepository.Add(trackTag);
+                            _unitOfWork.Commit();
                         }
                         else
                         {
@@ -95,12 +101,16 @@ namespace Project.Application.Features.Commands.UploadTrack
                             };
                             var addedTag = _tagRepository.Add(newTag);
 
+                            _unitOfWork.Commit();
+
                             trackTag = new TrackTag
                             {
                                 TrackId = trackId,
                                 TagId = addedTag.Id
                             };
                             _trackTagRepository.Add(trackTag);
+
+                            _unitOfWork.Commit();
                         }
                     }
                 }
@@ -117,7 +127,9 @@ namespace Project.Application.Features.Commands.UploadTrack
 
                     uploadedImageFileName = fileName;
                     track.ImageUrl = uploadedImageUrl;
+                    track.ImageFileName = uploadedImageFileName;
                     _trackRepository.Update(track);
+                    _unitOfWork.Commit();
                 }
 
                 if (command.Track != null)
@@ -132,7 +144,9 @@ namespace Project.Application.Features.Commands.UploadTrack
 
                     uploadedAudioFileName = audioFileName;
                     track.AudioFileUrl = uploadedAudioFileUrl;
+                    track.AudioFileName = uploadedAudioFileName;
                     _trackRepository.Update(track);
+                    _unitOfWork.Commit();
                 }
 
                 await _mediator.Publish(new DomainSuccessNotification("UploadTrack", _localizer.Text("Success")), cancellationToken);
@@ -155,33 +169,30 @@ namespace Project.Application.Features.Commands.UploadTrack
                     if (trackToDelete != null)
                     {
                         _trackRepository.Delete(trackToDelete);
+                        _unitOfWork.Commit();
                     }
                 }
 
                 var trackTags = _trackTagRepository.GetRanged(x => x.TrackId == trackId);
-                foreach (var trackTag in trackTags)
-                {
-                    _trackTagRepository.Delete(trackTag);
-                }
+                _trackTagRepository.DeleteRange([.. trackTags]);
+                _unitOfWork.Commit();
 
                 var tags = _tagRepository.GetRanged(x => x.Name == track.Title);
-                foreach (var tag in tags)
-                {
-                    _tagRepository.Delete(tag);
-                }
+                _tagRepository.DeleteRange([.. tags]);
+                _unitOfWork.Commit();
 
                 if (!string.IsNullOrEmpty(uploadedImageFileName))
                 {
-                    await _supabaseService.DeleteFileAsync(uploadedImageFileName);
+                    await _supabaseService.DeleteFileAsync(uploadedImageFileName, "jamcore-tracks");
                 }
 
                 if (!string.IsNullOrEmpty(uploadedAudioFileName))
                 {
-                    await _supabaseService.DeleteFileAsync(uploadedAudioFileName);
+                    await _supabaseService.DeleteFileAsync(uploadedAudioFileName, "jamcore-tracks");
                 }
 
                 await _mediator.Publish(new DomainNotification("UploadTrack", _localizer.Text("UploadFailed")), cancellationToken);
-                return null;
+                return default;
             }
         }
     }

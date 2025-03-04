@@ -67,10 +67,10 @@ namespace Project.Application.Features.Email.Commands.UpsertProfile
                 string fileName = $"profile_{user.Id}.jpg";
                 if (!string.IsNullOrEmpty(userProfile.ProfilePictureUrl))
                 {
-                    string publicUrl = await _supabaseService.GetPublicUrlAsync(fileName);
+                    string publicUrl = await _supabaseService.GetPublicUrlAsync(fileName, "jamcore-profiles");
                     if (!string.IsNullOrEmpty(publicUrl))
                     {
-                        await _supabaseService.DeleteFileAsync(fileName);
+                        await _supabaseService.DeleteFileAsync(fileName, "jamcore-profiles");
                     }
                 }
 

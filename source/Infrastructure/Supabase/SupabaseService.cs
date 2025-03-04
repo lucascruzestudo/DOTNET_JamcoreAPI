@@ -29,26 +29,24 @@ namespace Project.Infrastructure.Supabase
             using var stream = new MemoryStream(imageBytes);
             var response = await bucket.Upload(imageBytes, fileName);
             var publicUrl = bucket.GetPublicUrl(fileName);
-
             return publicUrl;
         }
 
-        public async Task<string> GetPublicUrlAsync(string fileName)
+        public async Task<string> GetPublicUrlAsync(string fileName, string bucketName)
         {
             await _supabase.InitializeAsync();
             var storage = _supabase.Storage;
-            var bucket = storage.From(_bucketName);
+            var bucket = storage.From(bucketName);
 
             return bucket.GetPublicUrl(fileName);
         }
 
-        public async Task<bool> DeleteFileAsync(string fileName)
+        public async Task<bool> DeleteFileAsync(string fileName, string bucketName)
         {
             await _supabase.InitializeAsync();
             var storage = _supabase.Storage;
-            var bucket = storage.From(_bucketName);
-
-            await bucket.Remove(fileName);
+            var bucket = storage.From(bucketName);
+            await bucket.Remove([fileName]);
             return true;
         }
     }
