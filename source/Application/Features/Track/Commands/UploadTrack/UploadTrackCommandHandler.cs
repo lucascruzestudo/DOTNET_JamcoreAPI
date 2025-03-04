@@ -117,7 +117,7 @@ namespace Project.Application.Features.Commands.UploadTrack
 
                 if (command.Image != null)
                 {
-                    string fileName = $"track_{trackId}_{track.Title.ToLower().Replace(" ", "_")}_image.jpg";
+                    string fileName = $"track_{trackId}_image.jpg";
                     uploadedImageUrl = await _supabaseService.UploadFileAsync(command.Image, fileName, "jamcore-tracks");
 
                     if (string.IsNullOrEmpty(uploadedImageUrl))
@@ -134,7 +134,7 @@ namespace Project.Application.Features.Commands.UploadTrack
 
                 if (command.Track != null)
                 {
-                    string audioFileName = $"track_{trackId}_{track.Title.ToLower().Replace(" ", "_")}_audio.mp3";
+                    string audioFileName = $"track_{trackId}_audio.mp3";
                     uploadedAudioFileUrl = await _supabaseService.UploadFileAsync(command.Track, audioFileName, "jamcore-tracks");
 
                     if (string.IsNullOrEmpty(uploadedAudioFileUrl))

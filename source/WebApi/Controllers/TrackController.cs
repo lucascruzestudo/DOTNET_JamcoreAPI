@@ -6,6 +6,7 @@ using Project.Application.Features.Commands.UploadTrack;
 using Project.Domain.Common;
 using Project.Application.Common.Localizers;
 using Project.Application.Features.Commands.DeleteTrack;
+using Project.Application.Features.Commands.UpdateTrack;
 
 namespace Project.WebApi.Controllers
 {
@@ -67,6 +68,46 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> DeleteTrack([FromBody] DeleteTrackCommandRequest request)
         {
             return Response(await _mediatorHandler.Send(new DeleteTrackCommand(request)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpPut]
+        [SwaggerOperation(Summary = "Update a track with optional image and audio changes.")]
+        [ProducesResponseType(typeof(UpdateTrackCommandResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UpdateTrack([FromForm] UpdateTrackCommandRequest request, IFormFile? trackFile = null, IFormFile? imageFile = null)
+        {
+            byte[] trackBytes = [];
+            byte[] imageBytes = [];
+
+            if (trackFile != null)
+            {
+                using var trackStream = new MemoryStream();
+                await trackFile.CopyToAsync(trackStream);
+                trackBytes = trackStream.ToArray();
+
+                if (!trackFile.ContentType.StartsWith("audio/"))
+                {
+                    return BadRequest(ResponseBase<object>.Failure([_localizer.Text("TrackFileAudioRequired").ToString()]));
+                }
+            }
+
+            if (imageFile != null)
+            {
+                using var imageStream = new MemoryStream();
+                await imageFile.CopyToAsync(imageStream);
+                imageBytes = imageStream.ToArray();
+
+                if (!imageFile.ContentType.StartsWith("image/"))
+                {
+                    return BadRequest(ResponseBase<object>.Failure([_localizer.Text("TrackFileImageRequired").ToString()]));
+                }
+            }
+
+            var command = new UpdateTrackCommand(request, trackBytes, imageBytes);
+
+            var response = await _mediatorHandler.Send(command);
+
+            return Ok(ResponseBase<UpdateTrackCommandResponse>.Success(response));
         }
     }
 }
