@@ -79,4 +79,13 @@
   <data name="UploadFailed" xml:space="preserve">
     <value>La carga del arquivo falló.</value>
   </data>
+  <data name="TrackFileRequired" xml:space="preserve">
+    <value>El archivo de la música es requerido.</value>
+  </data>
+  <data name="TrackFileAudioRequired" xml:space="preserve">
+    <value>El archivo de audio recibido no era un archivo de audio válido.</value>
+  </data>
+  <data name="TrackFileImageRequired" xml:space="preserve">
+    <value>El archivo de imagen recibido no era un archivo de imagen válido.</value>
+  </data>
 </root>

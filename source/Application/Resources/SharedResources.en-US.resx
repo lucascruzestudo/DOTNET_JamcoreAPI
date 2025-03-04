@@ -79,4 +79,13 @@
   <data name="UploadFailed" xml:space="preserve">
     <value>File upload failed.</value>
   </data>
+  <data name="TrackFileRequired" xml:space="preserve">
+    <value>The track file is required.</value>
+  </data>
+  <data name="TrackFileAudioRequired" xml:space="preserve">
+    <value>The received track audio file was not a valid audio file.</value>
+  </data>
+  <data name="TrackFileAudioRequired" xml:space="preserve">
+    <value>The received track image file was not a valid image file.</value>
+  </data>
 </root>

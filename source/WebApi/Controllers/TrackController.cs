@@ -3,17 +3,27 @@ using Project.Domain.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.UploadTrack;
+using Project.Domain.Common;
+using Project.Application.Common.Localizers;
 
 namespace Project.WebApi.Controllers
 {
-    public class TrackController(
-        INotificationHandler<DomainNotification> notifications,
-        INotificationHandler<DomainSuccessNotification> successNotifications,
-        IHttpContextAccessor httpContextAccessor,
-        IMediator mediatorHandler) 
-        : BaseController(notifications, successNotifications, mediatorHandler, httpContextAccessor)
+    public class TrackController : BaseController
     {
-        private readonly IMediator _mediatorHandler = mediatorHandler;
+        private readonly IMediator _mediatorHandler;
+        private readonly CultureLocalizer _localizer;
+
+        public TrackController(
+            INotificationHandler<DomainNotification> notifications,
+            INotificationHandler<DomainSuccessNotification> successNotifications,
+            IHttpContextAccessor httpContextAccessor,
+            IMediator mediatorHandler,
+            CultureLocalizer localizer)
+            : base(notifications, successNotifications, mediatorHandler, httpContextAccessor)
+        {
+            _mediatorHandler = mediatorHandler;
+            _localizer = localizer;
+        }
 
         [Authorize(Roles = "Admin, User")]
         [HttpPost]
@@ -21,23 +31,22 @@ namespace Project.WebApi.Controllers
         [ProducesResponseType(typeof(UploadTrackCommandResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UploadTrack([FromForm] UploadTrackCommandRequest request, IFormFile? trackFile = null, IFormFile? imageFile = null)
         {
-            byte[] trackBytes = [];
+            byte[] trackBytes;
             byte[] imageBytes = [];
 
-            if (trackFile != null)
+            if (trackFile == null)
             {
-                using var trackStream = new MemoryStream();
-                await trackFile.CopyToAsync(trackStream);
-                trackBytes = trackStream.ToArray();
-
-                if (!trackFile.ContentType.StartsWith("audio/"))
-                {
-                    return BadRequest("Track file must be an audio file.");
-                }
-            } else {
-                return BadRequest("Track file is required.");
+                return BadRequest(ResponseBase<object>.Failure([_localizer.Text("TrackFileRequired").ToString()]));
             }
 
+            using var trackStream = new MemoryStream();
+            await trackFile.CopyToAsync(trackStream);
+            trackBytes = trackStream.ToArray();
+
+            if (!trackFile.ContentType.StartsWith("audio/"))
+            {
+                return BadRequest(ResponseBase<object>.Failure([_localizer.Text("TrackFileAudioRequired").ToString()]));
+            }
             if (imageFile != null)
             {
                 using var imageStream = new MemoryStream();
@@ -46,7 +55,7 @@ namespace Project.WebApi.Controllers
 
                 if (!imageFile.ContentType.StartsWith("image/"))
                 {
-                    return BadRequest("Image file must be an image.");
+                    return BadRequest(ResponseBase<object>.Failure([_localizer.Text("TrackFileImageRequired").ToString()]));
                 }
             }
 
@@ -54,7 +63,7 @@ namespace Project.WebApi.Controllers
 
             var response = await _mediatorHandler.Send(command);
 
-            return Response(response);
+            return Ok(ResponseBase<UploadTrackCommandResponse>.Success(response));
         }
     }
 }
