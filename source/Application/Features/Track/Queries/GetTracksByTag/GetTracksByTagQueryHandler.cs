@@ -45,12 +45,14 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
             .ToList();
 
         var query = _trackRepository
-            .GetRanged(x => matchingTracks.Contains(x.Id))
+            .GetRanged(x => matchingTracks.Contains(x.Id) && x.IsPublic)
+            .OrderByDescending(x => x.CreatedAt)
             .Select(x => new TrackViewModel
             {
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
+                CreatedAt = x.CreatedAt,
                 ImageUrl = x.ImageUrl,
                 ImageFileName = x.ImageFileName,
                 AudioFileUrl = x.AudioFileUrl,
@@ -59,7 +61,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                 .GetRanged(tt => tt.TrackId == x.Id)
                 .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
-                Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!
+                Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);
