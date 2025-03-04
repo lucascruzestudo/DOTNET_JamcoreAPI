@@ -90,5 +90,8 @@
   <data name="NotFound" xml:space="preserve">
     <value>Recurso não encontrado.</value>
   </data>
+  <data name="GreaterThanZero" xml:space="preserve">
+    <value>{0} deve ser maior que 0.</value>
+  </data>
 </root>
 
