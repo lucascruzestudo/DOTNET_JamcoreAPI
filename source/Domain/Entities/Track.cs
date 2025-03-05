@@ -12,5 +12,7 @@ namespace Project.Domain.Entities
         public Guid UserId { get; set; }
         public virtual User? User { get; set; }
         public virtual ICollection<TrackTag> TrackTags { get; set; } = [];
+        public virtual ICollection<TrackLike> TrackLikes { get; set; } = [];
+
     }
 }

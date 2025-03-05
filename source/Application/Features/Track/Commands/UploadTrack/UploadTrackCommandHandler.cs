@@ -57,7 +57,7 @@ namespace Project.Application.Features.Commands.UploadTrack
 
             var track = new Track
             {
-                Title = command.Request.Title!,
+                Title = command.Request.Title!.Trim(),
                 Description = command.Request.Description ?? string.Empty,
                 IsPublic = command.Request.IsPublic,
                 UserId = user.Id

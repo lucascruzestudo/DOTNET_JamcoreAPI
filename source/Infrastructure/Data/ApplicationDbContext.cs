@@ -7,7 +7,7 @@ namespace Project.Infrastructure.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options), IApplicationDbContext, IUnitOfWork
 {
-    public DbSet<Role> User { get; set; }
+    public DbSet<User> User { get; set; }
     public DbSet<Role> Role { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)

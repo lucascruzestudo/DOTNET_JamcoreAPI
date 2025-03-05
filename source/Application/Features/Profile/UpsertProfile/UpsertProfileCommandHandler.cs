@@ -85,6 +85,7 @@ namespace Project.Application.Features.Email.Commands.UpsertProfile
                 userProfile.ProfilePictureUrl = fileUrl;
             }
 
+            userProfile.UpdatedAt = DateTime.UtcNow;
             _userProfileRepository.Update(userProfile);
             _unitOfWork.Commit();
 

@@ -9,17 +9,17 @@ internal class RoleSeed : IEntityTypeConfiguration<Role>
 {
     public void Configure(EntityTypeBuilder<Role> builder)
     {
-        builder.HasData(
-            new Role
-            (
-                id: RoleConstants.Admin,
-                name: "Admin"
-            ),
-            new Role
-            (
-                id: RoleConstants.User,
-                name: "User"
-            )
-        );
+        // builder.HasData(
+        //     new Role
+        //     (
+        //         id: RoleConstants.Admin,
+        //         name: "Admin"
+        //     ),
+        //     new Role
+        //     (
+        //         id: RoleConstants.User,
+        //         name: "User"
+        //     )
+        // );
     }
 }

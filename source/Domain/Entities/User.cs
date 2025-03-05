@@ -8,6 +8,7 @@ namespace Project.Domain.Entities
         public Guid RoleId { get; set; }
         public virtual Role? Role { get; set; }
         public virtual UserProfile? UserProfile { get; set; }
+        public virtual ICollection<TrackLike> LikedTracks { get; set; } = [];
 
         private User( ) { }
 

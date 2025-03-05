@@ -16,9 +16,10 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
     private readonly IRepositoryBase<TrackTag> _trackTagRepository;
     private readonly IRepositoryBase<Tag> _tagRepository;
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
 
-    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer)
+    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -27,6 +28,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         _tagRepository = tagRepository;
         _userRepository = userRepository;
         _localizer = localizer;
+        _trackLikeRepository = trackLikeRepository;
     }
 
     public async Task<GetRecentTracksQueryResponse?> Handle(GetRecentTracksQuery request, CancellationToken cancellationToken)
@@ -49,6 +51,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                     .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
+                LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count()
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);

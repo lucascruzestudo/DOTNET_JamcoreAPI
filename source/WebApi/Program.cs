@@ -1,9 +1,8 @@
 
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Project.Infrastructure.Data;
+using Project.Infrastructure.Data.Seeds;
 using Project.WebApi.Configurations;
 
 static async Task InitialiseDatabaseAsync(WebApplication app)
@@ -12,6 +11,7 @@ static async Task InitialiseDatabaseAsync(WebApplication app)
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     await context.Database.MigrateAsync();
+    await SeedData.InsertSeedsAsync(context);
 }
 
 var builder = WebApplication.CreateBuilder(args);

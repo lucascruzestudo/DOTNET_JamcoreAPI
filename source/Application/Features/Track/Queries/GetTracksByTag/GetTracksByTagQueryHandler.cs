@@ -16,9 +16,10 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
     private readonly IRepositoryBase<TrackTag> _trackTagRepository;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<Tag> _tagRepository;
+    private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
 
-    public GetTracksByTagQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<User> userRepository)
+    public GetTracksByTagQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<User> userRepository, IRepositoryBase<TrackLike> trackLikeRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -27,6 +28,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
         _tagRepository = tagRepository;
         _localizer = localizer;
         _userRepository = userRepository;
+        _trackLikeRepository = trackLikeRepository;
     }
 
     public async Task<GetTracksByTagQueryResponse?> Handle(GetTracksByTagQuery request, CancellationToken cancellationToken)
@@ -62,6 +64,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                 .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
+                LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count()
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);

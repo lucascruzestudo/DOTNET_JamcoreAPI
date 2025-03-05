@@ -16,9 +16,10 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<TrackTag> _trackTagRepository;
     private readonly IRepositoryBase<Tag> _tagRepository;
+    private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
 
-    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer)
+    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -27,6 +28,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         _trackTagRepository = trackTagRepository;
         _tagRepository = tagRepository;
         _localizer = localizer;
+        _trackLikeRepository = trackLikeRepository;
     }
 
     public async Task<GetTracksByUserQueryResponse?> Handle(GetTracksByUserQuery request, CancellationToken cancellationToken)
@@ -57,6 +59,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
                     .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
                 Username = user.Username,
+                LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count()
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);
