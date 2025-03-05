@@ -9,6 +9,7 @@ using Project.Application.Features.Commands.DeleteTrack;
 using Project.Application.Features.Commands.UpdateTrack;
 using Project.Application.Features.Commands.GetTracksByTag;
 using Project.Application.Features.Commands.GetTracksByUser;
+using Project.Application.Features.Commands.GetRecentTracks;
 
 namespace Project.WebApi.Controllers
 {
@@ -113,8 +114,17 @@ namespace Project.WebApi.Controllers
         }
 
         [Authorize(Roles = "Admin, User")]
+        [HttpGet()]
+        [SwaggerOperation(Summary = "Get recent tracks.")]
+        [ProducesResponseType(typeof(GetRecentTracksQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTracks([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            return Response(await _mediatorHandler.Send(new GetRecentTracksQuery(pageNumber, pageSize)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
         [HttpGet("byTag")]
-        [SwaggerOperation(Summary = "Get all tracks for a tag.")]
+        [SwaggerOperation(Summary = "Get public tracks for a tag.")]
         [ProducesResponseType(typeof(GetTracksByTagQueryResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTracksByTag([FromQuery] string tag, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
@@ -123,7 +133,7 @@ namespace Project.WebApi.Controllers
 
         [Authorize(Roles = "Admin, User")]
         [HttpGet("byUser")]
-        [SwaggerOperation(Summary = "Get all tracks of an user.")]
+        [SwaggerOperation(Summary = "Get public tracks of an user.")]
         [ProducesResponseType(typeof(GetTracksByUserQueryResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTracksByUser([FromQuery] string username, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
