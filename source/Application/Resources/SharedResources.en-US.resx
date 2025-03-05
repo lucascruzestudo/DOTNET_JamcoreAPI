@@ -85,7 +85,7 @@
   <data name="TrackFileAudioRequired" xml:space="preserve">
     <value>The received track audio file was not a valid audio file.</value>
   </data>
-  <data name="TrackFileAudioRequired" xml:space="preserve">
+  <data name="TrackFileImageRequired" xml:space="preserve">
     <value>The received track image file was not a valid image file.</value>
   </data>
   <data name="NotFound" xml:space="preserve">

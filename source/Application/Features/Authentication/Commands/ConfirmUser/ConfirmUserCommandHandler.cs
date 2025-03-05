@@ -8,13 +8,14 @@ using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.ConfirmUser;
 
-public class ConfirmUserCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, CultureLocalizer localizer, IRedisService redisService, IUserRepository userRepository, IEmailService emailService) : IRequestHandler<ConfirmUserCommand, ConfirmUserCommandResponse?>
+public class ConfirmUserCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, CultureLocalizer localizer, IRedisService redisService, IUserRepository userRepository, IEmailService emailService, IRepositoryBase<UserProfile> userProfileRepository) : IRequestHandler<ConfirmUserCommand, ConfirmUserCommandResponse?>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMediator _mediator = mediator;
     private readonly CultureLocalizer _localizer = localizer;
     private readonly IRedisService _redisService = redisService;
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly IRepositoryBase<UserProfile> _userProfileRepository = userProfileRepository;
     private readonly IEmailService _emailService = emailService;
 
     public async Task<ConfirmUserCommandResponse?> Handle(ConfirmUserCommand request, CancellationToken cancellationToken)
@@ -49,7 +50,13 @@ public class ConfirmUserCommandHandler(IUnitOfWork unitOfWork, IMediator mediato
             isHashed: true
         );
 
+        var userProfile = new UserProfile{
+            UserId = user.Id,
+        };
+
         var inserted = _userRepository.Add(user);
+        _unitOfWork.Commit();
+        _userProfileRepository.Add(userProfile);
         _unitOfWork.Commit();
 
         var subject = _localizer.Text("AccountConfirmedSubject");
