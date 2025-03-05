@@ -8,6 +8,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Features.Commands.DeleteTrack;
 using Project.Application.Features.Commands.UpdateTrack;
 using Project.Application.Features.Commands.GetTracksByTag;
+using Project.Application.Features.Commands.GetTracksByUser;
 
 namespace Project.WebApi.Controllers
 {
@@ -118,6 +119,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> GetTracksByTag([FromQuery] string tag, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             return Response(await _mediatorHandler.Send(new GetTracksByTagQuery(tag, pageNumber, pageSize)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("byUser")]
+        [SwaggerOperation(Summary = "Get all tracks of an user.")]
+        [ProducesResponseType(typeof(GetTracksByUserQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTracksByUser([FromQuery] string username, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            return Response(await _mediatorHandler.Send(new GetTracksByUserQuery(username, pageNumber, pageSize)));
         }
     }
 }
