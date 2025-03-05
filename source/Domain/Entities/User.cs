@@ -9,6 +9,8 @@ namespace Project.Domain.Entities
         public virtual Role? Role { get; set; }
         public virtual UserProfile? UserProfile { get; set; }
         public virtual ICollection<TrackLike> LikedTracks { get; set; } = [];
+        public virtual ICollection<TrackComment> UserComments { get; set; } = [];
+
 
         private User( ) { }
 

@@ -13,6 +13,6 @@ namespace Project.Domain.Entities
         public virtual User? User { get; set; }
         public virtual ICollection<TrackTag> TrackTags { get; set; } = [];
         public virtual ICollection<TrackLike> TrackLikes { get; set; } = [];
-
+        public virtual ICollection<TrackComment> TrackComments { get; set; } = [];
     }
 }

@@ -93,5 +93,8 @@
   <data name="GreaterThanZero" xml:space="preserve">
     <value>{0} deve ser maior que 0.</value>
   </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>Não autorizado.</value>
+  </data>
 </root>
 
