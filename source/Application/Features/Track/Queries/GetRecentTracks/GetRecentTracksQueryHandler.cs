@@ -18,8 +18,9 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
+    private readonly IUser _user;
 
-    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository)
+    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -29,6 +30,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         _userRepository = userRepository;
         _localizer = localizer;
         _trackLikeRepository = trackLikeRepository;
+        _user = user;
     }
 
     public async Task<GetRecentTracksQueryResponse?> Handle(GetRecentTracksQuery request, CancellationToken cancellationToken)
@@ -52,7 +54,8 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                 UserId = x.UserId,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
-                PlayCount = x.PlayCount
+                PlayCount = x.PlayCount,
+                UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);

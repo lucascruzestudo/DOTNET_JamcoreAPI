@@ -18,8 +18,11 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
     private readonly IRepositoryBase<Tag> _tagRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
+    private readonly IUser _user;
 
-    public GetTracksByTagQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<User> userRepository, IRepositoryBase<TrackLike> trackLikeRepository)
+    public GetTracksByTagQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, 
+    IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, 
+    IRepositoryBase<User> userRepository, IRepositoryBase<TrackLike> trackLikeRepository, IUser user)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -29,6 +32,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
         _localizer = localizer;
         _userRepository = userRepository;
         _trackLikeRepository = trackLikeRepository;
+        _user = user;
     }
 
     public async Task<GetTracksByTagQueryResponse?> Handle(GetTracksByTagQuery request, CancellationToken cancellationToken)
@@ -65,7 +69,8 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                 UserId = x.UserId,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
-                PlayCount = x.PlayCount
+                PlayCount = x.PlayCount,
+                UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);

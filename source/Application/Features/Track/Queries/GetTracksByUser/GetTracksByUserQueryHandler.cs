@@ -18,8 +18,9 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly IRepositoryBase<Tag> _tagRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
+    private readonly IUser _user;
 
-    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository)
+    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -29,6 +30,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         _tagRepository = tagRepository;
         _localizer = localizer;
         _trackLikeRepository = trackLikeRepository;
+        _user = user;
     }
 
     public async Task<GetTracksByUserQueryResponse?> Handle(GetTracksByUserQuery request, CancellationToken cancellationToken)
@@ -60,7 +62,8 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
                 UserId = x.UserId,
                 Username = user.Username,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
-                PlayCount = x.PlayCount
+                PlayCount = x.PlayCount,
+                UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);

@@ -15,4 +15,5 @@ public record TrackViewModel
     public DateTime CreatedAt { get; set; }
     public int LikeCount { get; set; }
     public int PlayCount { get; set; }
+    public bool UserLikedTrack { get; set; }
 }
