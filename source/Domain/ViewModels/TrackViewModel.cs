@@ -14,4 +14,5 @@ public record TrackViewModel
     public string Username { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public int LikeCount { get; set; }
+    public int PlayCount { get; set; }
 }

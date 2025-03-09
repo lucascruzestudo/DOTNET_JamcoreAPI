@@ -9,6 +9,7 @@ namespace Project.Domain.Entities
         public string ImageUrl { get; set; } = string.Empty;
         public string ImageFileName { get; set; } = string.Empty;
         public bool IsPublic { get; set; } = true;
+        public int PlayCount { get; set; } = 0;
         public Guid UserId { get; set; }
         public virtual User? User { get; set; }
         public virtual ICollection<TrackTag> TrackTags { get; set; } = [];
