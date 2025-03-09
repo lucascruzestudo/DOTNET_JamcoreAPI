@@ -26,7 +26,7 @@ public class CreateTrackPlayCommandHandler(IUnitOfWork unitOfWork, IMediator med
                 return default;
             }
         
-        var latestTrackPlay = _trackPlayRepository.GetRanged(tp => tp.UserId == user.Id).OrderByDescending(tp => tp.CreatedAt).FirstOrDefault();
+        var latestTrackPlay = _trackPlayRepository.GetRanged(tp => tp.UserId == user.Id && tp.TrackId == request.Request.TrackId).OrderByDescending(tp => tp.CreatedAt).FirstOrDefault();
 
         if (latestTrackPlay == null || DateTime.Now - latestTrackPlay.CreatedAt >= TimeSpan.FromSeconds(30))
         {

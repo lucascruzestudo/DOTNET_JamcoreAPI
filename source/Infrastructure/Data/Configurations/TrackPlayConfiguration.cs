@@ -10,7 +10,12 @@ namespace Project.Infrastructure.Data.Configurations
         {
             builder.ToTable("T_TRACK_PLAY");
 
-            builder.HasKey(tl => new { tl.UserId, tl.TrackId });
+            builder.HasKey(t => t.Id);
+
+            builder.Property(t => t.Id)
+                            .HasColumnType("uuid")
+                            .HasColumnName("PK_TRACKPLAYID")
+                            .ValueGeneratedOnAdd();
 
             builder.Property(tl => tl.UserId)
                    .HasColumnName("FK_USERID")
