@@ -19,10 +19,11 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
 
     public GetTracksByTagQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, 
     IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, 
-    IRepositoryBase<User> userRepository, IRepositoryBase<TrackLike> trackLikeRepository, IUser user)
+    IRepositoryBase<User> userRepository, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -33,6 +34,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
         _userRepository = userRepository;
         _trackLikeRepository = trackLikeRepository;
         _user = user;
+        _trackPlayRepository = trackPlayRepository;
     }
 
     public async Task<GetTracksByTagQueryResponse?> Handle(GetTracksByTagQuery request, CancellationToken cancellationToken)
@@ -69,7 +71,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                 UserId = x.UserId,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
-                PlayCount = x.PlayCount,
+                PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null
             }).AsQueryable();
             

@@ -19,8 +19,9 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
 
-    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user)
+    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -31,6 +32,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         _localizer = localizer;
         _trackLikeRepository = trackLikeRepository;
         _user = user;
+        _trackPlayRepository = trackPlayRepository;
     }
 
     public async Task<GetRecentTracksQueryResponse?> Handle(GetRecentTracksQuery request, CancellationToken cancellationToken)
@@ -54,7 +56,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                 UserId = x.UserId,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
-                PlayCount = x.PlayCount,
+                PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null
             }).AsQueryable();
             

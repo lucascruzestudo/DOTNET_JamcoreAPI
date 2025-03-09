@@ -61,10 +61,6 @@ namespace Project.Infrastructure.Data.Configurations
                              .HasColumnName("FL_DELETED")
                              .IsRequired();
 
-                     builder.Property(t => t.PlayCount)
-                            .HasColumnName("NM_PLAYCOUNT")
-                            .IsRequired();
-
                      builder.Property(t => t.UserId)
                             .HasColumnName("FK_USERID")
                             .IsRequired();
