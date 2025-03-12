@@ -16,4 +16,5 @@ public record TrackViewModel
     public int LikeCount { get; set; }
     public int PlayCount { get; set; }
     public bool UserLikedTrack { get; set; }
+    public string Duration { get; set; } = string.Empty;
 }

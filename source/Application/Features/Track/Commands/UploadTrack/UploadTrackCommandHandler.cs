@@ -8,6 +8,8 @@ using Project.Domain.Interfaces.Data.Repositories;
 using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using MediatR;
+using TagLib;
+using Tag = Project.Domain.Entities.Tag;
 
 namespace Project.Application.Features.Commands.UploadTrack
 {
@@ -145,6 +147,17 @@ namespace Project.Application.Features.Commands.UploadTrack
                     uploadedAudioFileName = audioFileName;
                     track.AudioFileUrl = uploadedAudioFileUrl;
                     track.AudioFileName = uploadedAudioFileName;
+                    
+                    using (var stream = new MemoryStream(command.Track))
+                    {
+                        var audioFile = TagLib.File.Create(new StreamFileAbstraction(audioFileName, stream, stream));
+                        var duration = audioFile.Properties.Duration;
+                        var durationText = duration.TotalSeconds >= 3600
+                            ? $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}"
+                            : $"{duration.Minutes:D2}:{duration.Seconds:D2}";
+                        track.Duration = durationText;
+                    }
+
                     _trackRepository.Update(track);
                     _unitOfWork.Commit();
                 }

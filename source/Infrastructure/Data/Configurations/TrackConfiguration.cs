@@ -61,6 +61,10 @@ namespace Project.Infrastructure.Data.Configurations
                              .HasColumnName("FL_DELETED")
                              .IsRequired();
 
+                     builder.Property(t => t.Duration)
+                            .HasColumnName("TX_DURATION")
+                            .IsRequired();
+
                      builder.Property(t => t.UserId)
                             .HasColumnName("FK_USERID")
                             .IsRequired();

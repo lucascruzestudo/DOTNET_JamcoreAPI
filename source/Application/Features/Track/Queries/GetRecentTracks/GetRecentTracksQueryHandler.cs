@@ -57,7 +57,8 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                 Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
                 PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
-                UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null
+                UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
+                Duration = x.Duration
             }).AsQueryable();
             
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);
