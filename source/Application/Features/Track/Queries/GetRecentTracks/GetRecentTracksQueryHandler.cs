@@ -57,8 +57,8 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                     .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
                 Username = _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != null && _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != ""
-                    ? $"{_userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName} · @{_userRepository.Get(u => u.Id == x.UserId)?.Username!}"
-                    : $"@{_userRepository.Get(u => u.Id == x.UserId)?.Username!}",
+                    ? $"{_userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName}"
+                    : $"{_userRepository.Get(u => u.Id == x.UserId)?.Username!}",
                 PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
