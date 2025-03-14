@@ -32,23 +32,18 @@ public static class SeedData
             context.User.AddRange(
                 new User
                 (
-                    username: "administrator",
-                    password: "123-!@#-123-!@#",
-                    email: "admin@system.com",
+                    id: Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                    username: "lucascruzadmin",
+                    password: "123",
+                    email: "lcs.gomes33@gmail.com",
                     roleId: RoleConstants.Admin
                 ),
                 new User
                 (
-                    username: "lucascruzestudo",
-                    password: "123-!@#-123-!@#",
-                    email: "lucascruzestudo@gmail.com",
-                    roleId: RoleConstants.Admin
-                ),
-                new User
-                (
-                    username: "lucascruztrabalho",
-                    password: "123-!@#-123-!@#",
-                    email: "lucascruztrabalho@gmail.com",
+                    id: Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                    username: "lucascruzuser",
+                    password: "123",
+                    email: "lcs.gomes3@gmail.com",
                     roleId: RoleConstants.User
                 )
             );

@@ -23,6 +23,15 @@ namespace Project.Domain.Entities
             RoleId = roleId;
         }
 
+        public User(Guid id, string username, string password, string email, Guid roleId)
+        {
+            Id = id;
+            Username = username;
+            HashedPassword = HashPassword(password);
+            Email = email;
+            RoleId = roleId;
+        }
+
         public User(string username, string password, string email, Guid roleId, bool isHashed)
         {
             Username = username;
