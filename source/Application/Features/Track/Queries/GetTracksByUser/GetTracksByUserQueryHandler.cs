@@ -14,6 +14,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly IMediator _mediator;
     private readonly IRepositoryBase<Track> _trackRepository;
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<UserProfile> _userProfileRepository;
     private readonly IRepositoryBase<TrackTag> _trackTagRepository;
     private readonly IRepositoryBase<Tag> _tagRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
@@ -21,7 +22,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
 
-    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository)
+    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository, IRepositoryBase<UserProfile> userProfileRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -33,6 +34,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         _trackLikeRepository = trackLikeRepository;
         _user = user;
         _trackPlayRepository = trackPlayRepository;
+        _userProfileRepository = userProfileRepository;
     }
 
     public async Task<GetTracksByUserQueryResponse?> Handle(GetTracksByUserQuery request, CancellationToken cancellationToken)
@@ -62,7 +64,9 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
                     .GetRanged(tt => tt.TrackId == x.Id)
                     .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
-                Username = user.Username,
+                Username = _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != null && _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != ""
+                    ? $"{_userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName} · @{_userRepository.Get(u => u.Id == x.UserId)?.Username!}"
+                    : $"@{_userRepository.Get(u => u.Id == x.UserId)?.Username!}",
                 LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
                 PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,

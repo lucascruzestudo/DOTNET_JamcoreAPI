@@ -16,12 +16,13 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
     private readonly IRepositoryBase<TrackTag> _trackTagRepository;
     private readonly IRepositoryBase<Tag> _tagRepository;
     private readonly IRepositoryBase<User> _userRepository;
+    private readonly IRepositoryBase<UserProfile> _userProfileRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
     private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
 
-    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository)
+    public GetRecentTracksQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository, IRepositoryBase<UserProfile> userProfileRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -33,6 +34,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         _trackLikeRepository = trackLikeRepository;
         _user = user;
         _trackPlayRepository = trackPlayRepository;
+        _userProfileRepository = userProfileRepository;
     }
 
     public async Task<GetRecentTracksQueryResponse?> Handle(GetRecentTracksQuery request, CancellationToken cancellationToken)
@@ -54,8 +56,9 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                     .GetRanged(tt => tt.TrackId == x.Id)
                     .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
                 UserId = x.UserId,
-                Username = _userRepository.Get(u => u.Id == x.UserId)?.Username!,
-                LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
+                Username = _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != null && _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != ""
+                    ? $"{_userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName} · @{_userRepository.Get(u => u.Id == x.UserId)?.Username!}"
+                    : $"@{_userRepository.Get(u => u.Id == x.UserId)?.Username!}",
                 PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
                 Duration = x.Duration
