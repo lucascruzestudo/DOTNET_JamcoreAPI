@@ -61,6 +61,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                     : $"@{_userRepository.Get(u => u.Id == x.UserId)?.Username!}",
                 PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
+                LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
                 Duration = x.Duration
             }).AsQueryable();
             
