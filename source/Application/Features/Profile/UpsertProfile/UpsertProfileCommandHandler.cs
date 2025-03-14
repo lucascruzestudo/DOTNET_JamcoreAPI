@@ -54,6 +54,7 @@ namespace Project.Application.Features.Email.Commands.UpsertProfile
                     Location = command.Request.Location,
                 };
                 _userProfileRepository.Add(userProfile);
+                _unitOfWork.Commit();
             }
             else
             {
@@ -62,7 +63,7 @@ namespace Project.Application.Features.Email.Commands.UpsertProfile
                 userProfile.Location = command.Request.Location;
             }
 
-            if (command.Image != null)
+            if (command.Image != null && command.Image.Length > 0)
             {
                 string fileName = $"profile_{user.Id}.jpg";
                 if (!string.IsNullOrEmpty(userProfile.ProfilePictureUrl))

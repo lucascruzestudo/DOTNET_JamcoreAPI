@@ -6,5 +6,6 @@ namespace Project.Application.Features.Commands.LoginUser
         public required string Username { get; set; }
         public required string Email { get; set; }
         public required Guid Id { get; set; }
+        public string ProfilePictureUrl { get; set; } = string.Empty;
     }
 }

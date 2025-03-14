@@ -1,14 +1,16 @@
 using Project.Application.Common.Interfaces;
 using Project.Application.Common.Localizers;
+using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
 using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.LoginUser;
 
-public class LoginUserCommandHandler(IUserRepository userRepository, ITokenService tokenService, IMediator mediator, CultureLocalizer localizer) : IRequestHandler<LoginUserCommand, LoginUserCommandResponse?>
+public class LoginUserCommandHandler(IUserRepository userRepository, IRepositoryBase<UserProfile> userInfoRepository, ITokenService tokenService, IMediator mediator, CultureLocalizer localizer) : IRequestHandler<LoginUserCommand, LoginUserCommandResponse?>
 {
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly IRepositoryBase<UserProfile> _userInfoRepository = userInfoRepository;
     private readonly ITokenService _tokenService = tokenService;
     private readonly IMediator _mediator = mediator;
     private readonly CultureLocalizer _localizer = localizer;
@@ -23,13 +25,16 @@ public class LoginUserCommandHandler(IUserRepository userRepository, ITokenServi
             return default;
         }
 
+        var userProfile = _userInfoRepository.Get(x => x.UserId == user.Id);
+
         var token = _tokenService.GenerateToken(user);
         await _mediator.Publish(new DomainSuccessNotification("LoginUser", _localizer.Text("Success")), cancellationToken);
         return new LoginUserCommandResponse { 
             Token = token,
             Username = user.Username,
             Email = user.Email,
-            Id = user.Id
+            Id = user.Id,
+            ProfilePictureUrl = userProfile?.ProfilePictureUrl ?? string.Empty
         };
     }
 }
