@@ -63,6 +63,12 @@ namespace Project.Application.Features.Commands.UpdateTrack
                 return default;
             }
 
+            if (track.UserId != user.Id)
+            {
+                await _mediator.Publish(new DomainNotification("UpdateTrack", _localizer.Text("InvalidUser")), cancellationToken);
+                return default;
+            }
+
             track.Title = command.Request.Title?.Trim() ?? track.Title;
             track.Description = command.Request.Description ?? track.Description;
             track.IsPublic = command.Request.IsPublic ?? track.IsPublic;
