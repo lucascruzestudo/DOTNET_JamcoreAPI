@@ -22,7 +22,13 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
 
-    public GetTracksByUserQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository, IRepositoryBase<UserProfile> userProfileRepository)
+    public GetTracksByUserQueryHandler(
+        IUnitOfWork unitOfWork, IMediator mediator, 
+        IRepositoryBase<Track> trackRepository, IRepositoryBase<User> userRepository, 
+        IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, 
+        CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, 
+        IUser user, IRepositoryBase<TrackPlay> trackPlayRepository, 
+        IRepositoryBase<UserProfile> userProfileRepository)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -47,8 +53,41 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
             return default;
         }
 
-        var query = _trackRepository
+        var trackIds = _trackRepository
             .GetRanged(x => x.UserId == user.Id && x.IsPublic)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => x.Id)
+            .ToList();
+
+        var trackTags = _trackTagRepository
+            .GetRanged(tt => trackIds.Contains(tt.TrackId))
+            .ToList();
+
+        var tagIds = trackTags.Select(tt => tt.TagId).Distinct().ToList();
+        var tags = _tagRepository
+            .GetRanged(x => tagIds.Contains(x.Id))
+            .ToDictionary(x => x.Id, x => x.Name);
+
+        var trackLikeCounts = _trackLikeRepository
+            .GetRanged(like => trackIds.Contains(like.TrackId))
+            .GroupBy(like => like.TrackId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var trackPlayCounts = _trackPlayRepository
+            .GetRanged(play => trackIds.Contains(play.TrackId))
+            .GroupBy(play => play.TrackId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var userProfiles = _userProfileRepository
+            .GetRanged(up => trackIds.Contains(up.UserId))
+            .ToDictionary(up => up.UserId, up => up.DisplayName);
+
+        var users = _userRepository
+            .GetRanged(u => trackIds.Contains(u.Id))
+            .ToDictionary(u => u.Id, u => u.Username);
+
+        var query = _trackRepository
+            .GetRanged(x => trackIds.Contains(x.Id))
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => new TrackViewModel
             {
@@ -60,19 +99,20 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
                 ImageFileName = x.ImageFileName,
                 AudioFileUrl = x.AudioFileUrl,
                 AudioFileName = x.AudioFileName,
-                Tags = [.. _trackTagRepository
-                    .GetRanged(tt => tt.TrackId == x.Id)
-                    .Join(_tagRepository.GetAll(), tt => tt.TagId, t => t.Id, (tt, t) => t.Name)],
+                Tags = trackTags
+                    .Where(tt => tt.TrackId == x.Id)
+                    .Select(tt => tags.GetValueOrDefault(tt.TagId, "Unknown"))
+                    .ToArray(),
                 UserId = x.UserId,
-                Username = _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != null && _userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName != ""
-                    ? $"{_userProfileRepository.Get(u => u.UserId == x.UserId)?.DisplayName}"
-                    : $"{_userRepository.Get(u => u.Id == x.UserId)?.Username!}",
-                LikeCount = _trackLikeRepository.GetRanged(like => like.TrackId == x.Id).Count(),
-                PlayCount = _trackPlayRepository.GetRanged(play => play.TrackId == x.Id).Count(),
+                Username = userProfiles.TryGetValue(x.UserId, out var displayName) && !string.IsNullOrEmpty(displayName)
+                    ? displayName
+                    : users.GetValueOrDefault(x.UserId, "Unknown"),
+                LikeCount = trackLikeCounts.GetValueOrDefault(x.Id, 0),
+                PlayCount = trackPlayCounts.GetValueOrDefault(x.Id, 0),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
                 Duration = x.Duration
             }).AsQueryable();
-            
+
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);
 
         _unitOfWork.Commit();

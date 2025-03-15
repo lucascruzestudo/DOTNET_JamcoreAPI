@@ -74,6 +74,9 @@ namespace Project.Infrastructure.Data.Configurations
                             .HasForeignKey(t => t.UserId)
                             .HasConstraintName("FK_TRACK_USER")
                             .OnDelete(DeleteBehavior.Cascade);
+
+                     builder.HasIndex(t => new { t.IsPublic, t.CreatedAt })
+                                   .HasDatabaseName("IX_TRACK_ISPUBLIC_CREATEDAT");
               }
        }
 }

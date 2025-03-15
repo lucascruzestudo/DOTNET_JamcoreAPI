@@ -10,6 +10,7 @@ using Project.Application.Features.Commands.UpdateTrack;
 using Project.Application.Features.Commands.GetTracksByTag;
 using Project.Application.Features.Commands.GetTracksByUser;
 using Project.Application.Features.Commands.GetRecentTracks;
+using Project.Application.Features.Commands.GetTrack;
 
 namespace Project.WebApi.Controllers
 {
@@ -138,6 +139,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> GetTracksByUser([FromQuery] string username, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             return Response(await _mediatorHandler.Send(new GetTracksByUserQuery(username, pageNumber, pageSize)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Get track by id.")]
+        [ProducesResponseType(typeof(GetTrackQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTrack([FromRoute] Guid id)
+        {
+            return Response(await _mediatorHandler.Send(new GetTrackQuery(id)));
         }
     }
 }
