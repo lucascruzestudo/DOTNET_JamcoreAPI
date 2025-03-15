@@ -17,4 +17,16 @@ public record TrackViewModel
     public int PlayCount { get; set; }
     public bool UserLikedTrack { get; set; }
     public string Duration { get; set; } = string.Empty;
+    public List<Comment> Comments { get; set; } = [];
+
+    public record Comment
+    {
+        public Guid Id { get; set; }
+        public string Text { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string UserProfilePictureUrl { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
 }

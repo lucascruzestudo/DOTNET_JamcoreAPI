@@ -48,6 +48,8 @@ public class CreateTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator 
         _unitOfWork.Commit();
 
         await _mediator.Publish(new DomainSuccessNotification("CreateTrackComment", _localizer.Text("Success")), cancellationToken);
-        return new CreateTrackCommentCommandResponse {}; 
+        return new CreateTrackCommentCommandResponse {
+            Id = trackComment.Id
+        }; 
     }
 }
