@@ -45,6 +45,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, G
         var responseViewModel = new UserProfileViewModel
         {
             Id = _user.Id ?? Guid.Empty,
+            Username = user.Username ?? string.Empty,
             DisplayName = profile.DisplayName ?? string.Empty,
             Bio = profile.Bio ?? string.Empty,
             Location = profile.Location ?? string.Empty,
