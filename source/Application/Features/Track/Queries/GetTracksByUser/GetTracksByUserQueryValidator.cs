@@ -11,8 +11,8 @@ public class GetTracksByUserQueryValidator : AbstractValidator<GetTracksByUserQu
 
         _localizer = localizer;
 
-        RuleFor(x => x.Username)
-            .NotEmpty().WithMessage(_localizer.Text("RequiredField", "Username"));
+        RuleFor(x => x.Id)
+            .NotEmpty().WithMessage(_localizer.Text("RequiredField", "Id"));
 
         RuleFor(x => x.PageNumber)
             .GreaterThanOrEqualTo(1).WithMessage(_localizer.Text("GreaterThanZero", "PageNumber"));

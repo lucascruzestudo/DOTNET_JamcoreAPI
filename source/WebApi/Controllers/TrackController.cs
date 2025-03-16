@@ -133,12 +133,12 @@ namespace Project.WebApi.Controllers
         }
 
         [Authorize(Roles = "Admin, User")]
-        [HttpGet("byUser")]
+        [HttpGet("byUser/{id}")]
         [SwaggerOperation(Summary = "Get public tracks of an user.")]
         [ProducesResponseType(typeof(GetTracksByUserQueryResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetTracksByUser([FromQuery] string username, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetTracksByUser(string id, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            return Response(await _mediatorHandler.Send(new GetTracksByUserQuery(username, pageNumber, pageSize)));
+            return Response(await _mediatorHandler.Send(new GetTracksByUserQuery(Guid.Parse(id), pageNumber, pageSize)));
         }
 
         [Authorize(Roles = "Admin, User")]
