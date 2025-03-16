@@ -42,7 +42,7 @@ namespace Project.WebApi.Controllers
             await trackFile.CopyToAsync(trackStream);
             trackBytes = trackStream.ToArray();
 
-            if (!trackFile.ContentType.StartsWith("audio/"))
+            if (!trackFile.ContentType.StartsWith("audio/") || trackFile.ContentType != "audio/mpeg")
             {
                 return BadRequest(ResponseBase<object>.Failure([_localizer.Text("TrackFileAudioRequired").ToString()]));
             }

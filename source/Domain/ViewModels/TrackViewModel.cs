@@ -29,5 +29,6 @@ public record TrackViewModel
         public string DisplayName { get; set; } = string.Empty;
         public string UserProfilePictureUrl { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public DateTime? UserProfileUpdatedAt { get; set; }
     }
 }

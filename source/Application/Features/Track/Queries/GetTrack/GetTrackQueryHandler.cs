@@ -82,6 +82,7 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
                 Username = user?.Username ?? "unknown",
                 DisplayName = userProfile?.DisplayName ?? user?.Username ?? "unknown",
                 UserProfilePictureUrl = userProfile?.ProfilePictureUrl ?? string.Empty,
+                UserProfileUpdatedAt = userProfile?.UpdatedAt ?? userProfile?.CreatedAt ?? null,
                 CreatedAt = comment.CreatedAt
             };
         }).ToList();
