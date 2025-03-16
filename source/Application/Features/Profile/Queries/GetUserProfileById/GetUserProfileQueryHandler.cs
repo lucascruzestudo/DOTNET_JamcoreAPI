@@ -44,12 +44,13 @@ public class GetUserProfileByIdQueryHandler : IRequestHandler<GetUserProfileById
 
         var responseViewModel = new UserProfileViewModel
         {
-            Id = _user.Id ?? Guid.Empty,
+            Id = user.Id,
             Username = user.Username ?? string.Empty,
             DisplayName = profile.DisplayName ?? string.Empty,
             Bio = profile.Bio ?? string.Empty,
             Location = profile.Location ?? string.Empty,
             ProfilePictureUrl = profile.ProfilePictureUrl ?? string.Empty,
+            UpdatedAt = profile.UpdatedAt ?? profile.CreatedAt
         }; 
 
         await _mediator.Publish(new DomainSuccessNotification("GetUserProfileById", _localizer.Text("Success")), cancellationToken);

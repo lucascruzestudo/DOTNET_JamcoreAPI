@@ -103,7 +103,8 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
             PlayCount = trackPlayCount,
             UserLikedTrack = _trackLikeRepository.Get(x => x.TrackId == track.Id && x.UserId == _user.Id) != null,
             Duration = track.Duration,
-            Comments = comments
+            Comments = comments,
+            UpdatedAt = track.UpdatedAt ?? track.CreatedAt
         };
 
         _unitOfWork.Commit();

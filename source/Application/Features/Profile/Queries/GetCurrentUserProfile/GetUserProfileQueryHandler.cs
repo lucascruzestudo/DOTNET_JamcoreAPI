@@ -50,6 +50,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, G
             Bio = profile.Bio ?? string.Empty,
             Location = profile.Location ?? string.Empty,
             ProfilePictureUrl = profile.ProfilePictureUrl ?? string.Empty,
+            UpdatedAt = profile.UpdatedAt ?? profile.CreatedAt
         }; 
 
         await _mediator.Publish(new DomainSuccessNotification("GetUserProfile", _localizer.Text("Success")), cancellationToken);

@@ -99,11 +99,12 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                     ? displayName
                     : users.TryGetValue(x.UserId, out var username) && !string.IsNullOrEmpty(username)
                         ? username
-                        : "Unknown",
+                        : "null",
                 LikeCount = trackLikeCounts.TryGetValue(x.Id, out int value) ? value : 0,
                 PlayCount = trackPlayCounts.TryGetValue(x.Id, out int value2) ? value2 : 0,
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
-                Duration = x.Duration
+                Duration = x.Duration,
+                UpdatedAt = x.UpdatedAt ?? x.CreatedAt
             }).AsQueryable();
 
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);

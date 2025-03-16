@@ -68,7 +68,8 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                 x.AudioFileUrl,
                 x.AudioFileName,
                 x.Duration,
-                x.UserId
+                x.UserId,
+                x.UpdatedAt
             })
             .ToList();
 
@@ -114,7 +115,8 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
             LikeCount = trackLikeCounts.TryGetValue(x.Id, out var likeCount) ? likeCount : 0,
             PlayCount = trackPlayCounts.TryGetValue(x.Id, out var playCount) ? playCount : 0,
             UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
-            Duration = x.Duration
+            Duration = x.Duration,
+            UpdatedAt = x.UpdatedAt ?? x.CreatedAt
         }).ToList();
 
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(trackViewModels.AsQueryable(), request.PageNumber, request.PageSize);

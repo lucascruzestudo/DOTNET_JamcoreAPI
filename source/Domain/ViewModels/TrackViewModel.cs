@@ -18,6 +18,7 @@ public record TrackViewModel
     public bool UserLikedTrack { get; set; }
     public string Duration { get; set; } = string.Empty;
     public List<Comment> Comments { get; set; } = [];
+    public DateTime UpdatedAt { get; set; }
 
     public record Comment
     {

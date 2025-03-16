@@ -95,7 +95,8 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
                 LikeCount = trackLikeCounts.GetValueOrDefault(x.Id, 0),
                 PlayCount = trackPlayCounts.GetValueOrDefault(x.Id, 0),
                 UserLikedTrack = _trackLikeRepository.Get(like => like.TrackId == x.Id && like.UserId == _user.Id) != null,
-                Duration = x.Duration
+                Duration = x.Duration,
+                UpdatedAt = x.UpdatedAt ?? x.CreatedAt
             }).AsQueryable();
 
         var paginatedTracks = PaginatedList<TrackViewModel>.Create(query, request.PageNumber, request.PageSize);
