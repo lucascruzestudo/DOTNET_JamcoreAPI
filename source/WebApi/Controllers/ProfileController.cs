@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.UpsertProfile;
 using Project.Application.Features.Commands.GetUserProfile;
+using Project.Application.Features.Commands.GetUserProfileById;
 
 namespace Project.WebApi.Controllers;
 
@@ -42,6 +43,15 @@ public class ProfileController(INotificationHandler<DomainNotification> notifica
     public async Task<IActionResult> GetUserProfile()
     {
         return Response(await _mediatorHandler.Send(new GetUserProfileQuery()));
+    }
+
+    [Authorize(Roles = "Admin, User")]
+    [HttpGet("{id}")]
+    [SwaggerOperation(Summary = "Get user profile by Id.")]
+    [ProducesResponseType(typeof(GetUserProfileByIdQueryResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUserProfileById(Guid id)
+    {
+        return Response(await _mediatorHandler.Send(new GetUserProfileByIdQuery(id)));
     }
 
 }
