@@ -33,17 +33,17 @@ public static class SeedData
                 new User
                 (
                     id: Guid.Parse("00000000-0000-0000-0000-000000000001"),
-                    username: "lucascruzadmin",
+                    username: "jamcoreadmin",
                     password: "123",
-                    email: "lcs.gomes33@gmail.com",
+                    email: "admin@jamcore.com",
                     roleId: RoleConstants.Admin
                 ),
                 new User
                 (
                     id: Guid.Parse("00000000-0000-0000-0000-000000000002"),
-                    username: "lucascruzuser",
+                    username: "jamcoreuser",
                     password: "123",
-                    email: "lcs.gomes3@gmail.com",
+                    email: "user@jamcore.com",
                     roleId: RoleConstants.User
                 )
             );
