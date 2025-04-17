@@ -21,7 +21,7 @@ namespace Project.Application.Features.Commands.RegisterUser
             var tokenInfo = $"{command.Request.Email};{User.HashPassword(command.Request.Password)};{command.Request.Username}";
             await _redisService.SetAsync(token, tokenInfo, TimeSpan.FromMinutes(expirationMinutes));
 
-            var confirmationUrl = $"http://localhost:5000/api/v1/Authentication/Confirm/{token}";
+            var confirmationUrl = $"http://localhost:5173/confirmaccount/{token}";
 
             var subject = _localizer.Text("ConfirmEmailSubject");
             var bodyContent = _localizer.Text("ConfirmEmailBody", command.Request.Username, confirmationUrl, expirationMinutes);

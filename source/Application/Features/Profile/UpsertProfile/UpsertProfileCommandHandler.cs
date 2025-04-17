@@ -46,13 +46,12 @@ namespace Project.Application.Features.Email.Commands.UpsertProfile
             var userProfile = _userProfileRepository.Get(x => x.UserId == user.Id);
             if (userProfile == null)
             {
-                userProfile = new UserProfile
-                {
-                    UserId = user.Id,
-                    DisplayName = command.Request.DisplayName,
-                    Bio = command.Request.Bio,
-                    Location = command.Request.Location,
-                };
+                userProfile = new UserProfile(
+                    user.Id,
+                    command.Request.DisplayName,
+                    command.Request.Bio,
+                    command.Request.Location
+                );
                 _userProfileRepository.Add(userProfile);
                 _unitOfWork.Commit();
             }

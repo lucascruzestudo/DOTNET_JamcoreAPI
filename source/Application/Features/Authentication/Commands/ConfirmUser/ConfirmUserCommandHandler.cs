@@ -50,9 +50,9 @@ public class ConfirmUserCommandHandler(IUnitOfWork unitOfWork, IMediator mediato
             isHashed: true
         );
 
-        var userProfile = new UserProfile{
-            UserId = user.Id,
-        };
+        var userProfile = new UserProfile(
+            userId: user.Id
+        );
 
         var inserted = _userRepository.Add(user);
         _unitOfWork.Commit();

@@ -9,6 +9,7 @@ public static class SeedData
 {
     public static async Task InsertSeedsAsync(ApplicationDbContext context)
     {
+        // Seed Roles
         if (!await context.Role.AnyAsync())
         {
             context.Role.AddRange(
@@ -27,6 +28,7 @@ public static class SeedData
             await context.SaveChangesAsync();
         }
 
+        // Seed Users
         if (!await context.User.AnyAsync())
         {
             context.User.AddRange(
@@ -45,6 +47,25 @@ public static class SeedData
                     password: "123",
                     email: "user@jamcore.com",
                     roleId: RoleConstants.User
+                )
+            );
+
+            await context.SaveChangesAsync();
+
+            context.UserProfile.AddRange(
+                new UserProfile
+                (
+                    userId: Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                    displayName: "admin",
+                    bio: "admin do jamcore",
+                    location: "casa da moderação"
+                ),
+                new UserProfile
+                (
+                    userId: Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                    displayName: "usuario",
+                    bio: "usuário teste do jamcore",
+                    location: "casa da moderação"
                 )
             );
 
