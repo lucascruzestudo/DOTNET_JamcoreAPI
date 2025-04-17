@@ -1,3 +1,6 @@
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
 using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
@@ -18,12 +21,24 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<UserProfile> _userProfileRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
-    private readonly CultureLocalizer _localizer;
-    private readonly IUser _user;
     private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
+    private readonly CultureLocalizer _localizer;
+    private readonly IUser _user;
 
-    public GetTrackQueryHandler(IUnitOfWork unitOfWork, IRepositoryBase<TrackComment> trackCommentRepository, IMediator mediator, IRepositoryBase<Track> trackRepository, IRepositoryBase<TrackTag> trackTagRepository, IRepositoryBase<Tag> tagRepository, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IRepositoryBase<TrackLike> trackLikeRepository, IUser user, IRepositoryBase<TrackPlay> trackPlayRepository, IRepositoryBase<UserProfile> userProfileRepository)
+    public GetTrackQueryHandler(
+        IUnitOfWork unitOfWork,
+        IMediator mediator,
+        IRepositoryBase<Track> trackRepository,
+        IRepositoryBase<TrackTag> trackTagRepository,
+        IRepositoryBase<Tag> tagRepository,
+        IRepositoryBase<User> userRepository,
+        IRepositoryBase<UserProfile> userProfileRepository,
+        IRepositoryBase<TrackLike> trackLikeRepository,
+        IRepositoryBase<TrackPlay> trackPlayRepository,
+        IRepositoryBase<TrackComment> trackCommentRepository,
+        CultureLocalizer localizer,
+        IUser user)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -31,12 +46,12 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
         _trackTagRepository = trackTagRepository;
         _tagRepository = tagRepository;
         _userRepository = userRepository;
-        _localizer = localizer;
-        _trackLikeRepository = trackLikeRepository;
-        _user = user;
-        _trackPlayRepository = trackPlayRepository;
         _userProfileRepository = userProfileRepository;
+        _trackLikeRepository = trackLikeRepository;
+        _trackPlayRepository = trackPlayRepository;
         _trackCommentRepository = trackCommentRepository;
+        _localizer = localizer;
+        _user = user;
     }
 
     public async Task<GetTrackQueryResponse?> Handle(GetTrackQuery request, CancellationToken cancellationToken)
@@ -44,48 +59,52 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
         var track = _trackRepository.Get(x => x.Id == request.TrackId);
         if (track == null)
         {
-            await _mediator.Publish(new DomainNotification("GetTrack", _localizer.Text("NotFound")), cancellationToken);
+            await _mediator.Publish(
+                new DomainNotification("GetTrack", _localizer.Text("NotFound")),
+                cancellationToken);
             return default;
         }
 
-        var trackTags = _trackTagRepository.GetRanged(x => x.TrackId == track.Id).ToList();
-        var tagIds = trackTags.Select(tt => tt.TagId).Distinct().ToList();
-        var tags = _tagRepository.GetRanged(x => tagIds.Contains(x.Id)).ToDictionary(x => x.Id, x => x.Name);
+        var likesByTrack = _trackLikeRepository
+            .GetAll()
+            .GroupBy(x => x.TrackId)
+            .Select(g => new { TrackId = g.Key, Likes = g.ToList() })
+            .FirstOrDefault(x => x.TrackId == track.Id);
 
-        var trackLikeCount = _trackLikeRepository.GetRanged(x => x.TrackId == track.Id).Count();
-        var trackPlayCount = _trackPlayRepository.GetRanged(x => x.TrackId == track.Id).Count();
+        var playsByTrack = _trackPlayRepository
+            .GetAll()
+            .GroupBy(x => x.TrackId)
+            .Select(g => new { TrackId = g.Key, Count = g.Count() })
+            .FirstOrDefault(x => x.TrackId == track.Id);
 
-        var userProfile = _userProfileRepository.Get(u => u.UserId == track.UserId);
-        var user = _userRepository.Get(u => u.Id == track.UserId);
-        var username = userProfile?.DisplayName ?? user?.Username ?? "Unknown";
+        var trackTags = _trackTagRepository.GetRanged(x => x.TrackId == track.Id);
+        var tagIds = trackTags.Select(tt => tt.TagId).Distinct();
+        var tags = _tagRepository
+            .GetRanged(x => tagIds.Contains(x.Id))
+            .Select(t => t.Name)
+            .ToArray();
 
-        var trackComments = _trackCommentRepository.GetRanged(x => x.TrackId == track.Id).ToList();
+        var author = _userRepository.Get(u => u.Id == track.UserId);
+        var authorProfile = _userProfileRepository.Get(u => u.UserId == track.UserId);
+        var username = authorProfile?.DisplayName ?? author?.Username ?? "Unknown";
 
-        var commentUserIds = trackComments.Select(c => c.UserId).Distinct().ToList();
-        var commentUsers = _userRepository
-            .GetRanged(u => commentUserIds.Contains(u.Id))
-            .ToDictionary(u => u.Id, u => u);
+        var commentsQuery = from comment in _trackCommentRepository.GetRanged(x => x.TrackId == track.Id)
+                           join user in _userRepository.GetAll() on comment.UserId equals user.Id
+                           join userProfile in _userProfileRepository.GetAll() on comment.UserId equals userProfile.UserId into profiles
+                           from userProfile in profiles.DefaultIfEmpty()
+                           select new TrackViewModel.Comment
+                           {
+                               Id = comment.Id,
+                               Text = comment.Comment,
+                               UserId = comment.UserId,
+                               Username = user.Username ?? "unknown",
+                               DisplayName = userProfile?.DisplayName ?? user.Username ?? "unknown",
+                               UserProfilePictureUrl = userProfile?.ProfilePictureUrl ?? string.Empty,
+                               UserProfileUpdatedAt = userProfile?.UpdatedAt ?? userProfile?.CreatedAt,
+                               CreatedAt = comment.CreatedAt
+                           };
 
-        var commentUserProfiles = _userProfileRepository
-            .GetRanged(u => commentUserIds.Contains(u.UserId))
-            .ToDictionary(u => u.UserId, u => u);
-
-        var comments = trackComments.Select(comment =>
-        {
-            var user = commentUsers.GetValueOrDefault(comment.UserId);
-            var userProfile = commentUserProfiles.GetValueOrDefault(comment.UserId);
-            return new TrackViewModel.Comment
-            {
-                Id = comment.Id,
-                Text = comment.Comment,
-                UserId = comment.UserId,
-                Username = user?.Username ?? "unknown",
-                DisplayName = userProfile?.DisplayName ?? user?.Username ?? "unknown",
-                UserProfilePictureUrl = userProfile?.ProfilePictureUrl ?? string.Empty,
-                UserProfileUpdatedAt = userProfile?.UpdatedAt ?? userProfile?.CreatedAt ?? null,
-                CreatedAt = comment.CreatedAt
-            };
-        }).ToList();
+        var comments = commentsQuery.ToList();
 
         var trackResponse = new TrackViewModel
         {
@@ -97,19 +116,22 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
             ImageFileName = track.ImageFileName,
             AudioFileUrl = track.AudioFileUrl,
             AudioFileName = track.AudioFileName,
-            Tags = trackTags.Select(tt => tags[tt.TagId]).ToArray(),
+            Tags = tags,
             UserId = track.UserId,
             Username = username,
-            LikeCount = trackLikeCount,
-            PlayCount = trackPlayCount,
-            UserLikedTrack = _trackLikeRepository.Get(x => x.TrackId == track.Id && x.UserId == _user.Id) != null,
+            LikeCount = likesByTrack?.Likes.Count ?? 0,
+            PlayCount = playsByTrack?.Count ?? 0,
+            UserLikedTrack = likesByTrack?.Likes.Any(like => like.UserId == _user.Id) ?? false,
             Duration = track.Duration,
             Comments = comments,
             UpdatedAt = track.UpdatedAt ?? track.CreatedAt
         };
 
         _unitOfWork.Commit();
-        await _mediator.Publish(new DomainSuccessNotification("GetTrack", _localizer.Text("Success")), cancellationToken);
+
+        await _mediator.Publish(
+            new DomainSuccessNotification("GetTrack", _localizer.Text("Success")),
+            cancellationToken);
 
         return new GetTrackQueryResponse
         {

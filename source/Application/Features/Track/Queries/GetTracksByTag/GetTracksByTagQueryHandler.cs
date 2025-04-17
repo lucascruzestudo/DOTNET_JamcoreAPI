@@ -70,6 +70,16 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize);
 
+        var likesByTrack = _trackLikeRepository
+            .GetAll()
+            .GroupBy(x => x.TrackId)
+            .Select(g => new { TrackId = g.Key, Likes = g.ToList() });
+
+        var playsByTrack = _trackPlayRepository
+            .GetAll()
+            .GroupBy(x => x.TrackId)
+            .Select(g => new { TrackId = g.Key, Count = g.Count() });
+
         var query = from track in tracksQuery
                     join user in _userRepository.GetAll() on track.UserId equals user.Id
                     join userProfile in _userProfileRepository.GetAll() on track.UserId equals userProfile.UserId into userProfiles
@@ -78,26 +88,23 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                     from trackTag in trackTags.DefaultIfEmpty()
                     join tag in _tagRepository.GetAll() on trackTag.TagId equals tag.Id into tags
                     from tag in tags.DefaultIfEmpty()
-                    join trackLike in _trackLikeRepository.GetAll() on track.Id equals trackLike.TrackId into trackLikes
-                    from trackLike in trackLikes.DefaultIfEmpty()
-                    join trackPlay in _trackPlayRepository.GetAll() on track.Id equals trackPlay.TrackId into trackPlays
-                    from trackPlay in trackPlays.DefaultIfEmpty()
-                    group new { track, user, userProfile, tag, trackLike, trackPlay } by new
+                    select new { track, user, userProfile, tag } into x
+                    group x by new
                     {
-                        track.Id,
-                        track.Title,
-                        track.Description,
-                        track.CreatedAt,
-                        track.ImageUrl,
-                        track.ImageFileName,
-                        track.AudioFileUrl,
-                        track.AudioFileName,
-                        track.UserId,
-                        Username = userProfile != null && !string.IsNullOrEmpty(userProfile.DisplayName)
-                            ? userProfile.DisplayName
-                            : user.Username ?? "Unknown",
-                        track.Duration,
-                        UpdatedAt = track.UpdatedAt ?? track.CreatedAt
+                        x.track.Id,
+                        x.track.Title,
+                        x.track.Description,
+                        x.track.CreatedAt,
+                        x.track.ImageUrl,
+                        x.track.ImageFileName,
+                        x.track.AudioFileUrl,
+                        x.track.AudioFileName,
+                        x.track.UserId,
+                        Username = x.userProfile != null && !string.IsNullOrEmpty(x.userProfile.DisplayName)
+                            ? x.userProfile.DisplayName
+                            : x.user.Username ?? "Unknown",
+                        x.track.Duration,
+                        UpdatedAt = x.track.UpdatedAt ?? x.track.CreatedAt
                     } into g
                     select new TrackViewModel
                     {
@@ -112,9 +119,9 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                         Tags = g.Where(x => x.tag != null).Select(x => x.tag.Name).Distinct().ToArray(),
                         UserId = g.Key.UserId,
                         Username = g.Key.Username,
-                        LikeCount = g.Count(x => x.trackLike != null),
-                        PlayCount = g.Count(x => x.trackPlay != null),
-                        UserLikedTrack = g.Any(x => x.trackLike != null && x.trackLike.UserId == _user.Id),
+                        LikeCount = likesByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Likes.Count ?? 0,
+                        PlayCount = playsByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Count ?? 0,
+                        UserLikedTrack = likesByTrack.Any(l => l.TrackId == g.Key.Id && l.Likes.Any(like => like.UserId == _user.Id)),
                         Duration = g.Key.Duration,
                         UpdatedAt = g.Key.UpdatedAt
                     };
