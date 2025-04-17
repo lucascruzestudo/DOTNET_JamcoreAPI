@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.CreateTrackComment;
 using Project.Application.Features.Commands.DeleteTrackComment;
+using Project.Application.Features.Commands.GetRecentCommentsByUser;
 
 namespace Project.WebApi.Controllers
 {
@@ -30,6 +31,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> DeleteTrackComment([FromBody] DeleteTrackCommentCommandRequest request)
         {
             return Response(await _mediatorHandler.Send(new DeleteTrackCommentCommand(request)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("byUser")]
+        [SwaggerOperation(Summary = "Get public tracks for a tag.")]
+        [ProducesResponseType(typeof(GetRecentCommentsByUserQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetRecentCommentsByUser([FromQuery] Guid userId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
+        {
+            return Response(await _mediatorHandler.Send(new GetRecentCommentsByUserQuery(pageNumber, pageSize, userId)));
         }
     }
 }
