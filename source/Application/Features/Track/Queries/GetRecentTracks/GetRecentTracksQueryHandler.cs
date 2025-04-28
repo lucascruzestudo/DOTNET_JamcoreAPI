@@ -67,14 +67,13 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
             .GroupBy(x => x.TrackId)
             .Select(g => new { TrackId = g.Key, Count = g.Count() });
 
-
         var query = from track in tracksQuery
                     join user in _userRepository.GetAll() on track.UserId equals user.Id
                     join userProfile in _userProfileRepository.GetAll() on track.UserId equals userProfile.UserId into userProfiles
                     from userProfile in userProfiles.DefaultIfEmpty()
                     join trackTag in _trackTagRepository.GetAll() on track.Id equals trackTag.TrackId into trackTags
                     from trackTag in trackTags.DefaultIfEmpty()
-                    join tag in _tagRepository.GetAll() on trackTag.TagId equals tag.Id into tags
+                    join tag in _tagRepository.GetAll() on trackTag?.TagId equals tag.Id into tags
                     from tag in tags.DefaultIfEmpty()
                     select new { track, user, userProfile, tag } into x
                     group x by new
@@ -103,7 +102,10 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                         ImageUrl = g.Key.ImageUrl,
                         AudioFileUrl = g.Key.AudioFileUrl,
                         AudioFileName = g.Key.AudioFileName,
-                        Tags = g.Where(x => x.tag != null).Select(x => x.tag.Name).Distinct().ToArray(),
+                        Tags = g.Where(x => x.tag != null && !string.IsNullOrEmpty(x.tag.Name))
+                                .Select(x => x.tag.Name)
+                                .Distinct()
+                                .ToArray(),
                         UserId = g.Key.UserId,
                         Username = g.Key.Username,
                         LikeCount = likesByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Likes.Count ?? 0,

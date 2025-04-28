@@ -54,41 +54,24 @@ public class GetRecentCommentsByUserQueryHandler : IRequestHandler<GetRecentComm
                            join userProfile in _userProfileRepository.GetAll()
                                on comment.UserId equals userProfile.UserId into userProfiles
                            from userProfile in userProfiles.DefaultIfEmpty()
-                           select new
+                           select new CommentViewModel
                            {
-                               comment.Id,
-                               comment.Comment,
-                               comment.UserId,
-                               comment.CreatedAt,
-                               comment.TrackId,
-                               TrackTitle = track.Title,
+                               Id = comment.Id,
+                               Text = comment.Comment,
+                               UserId = comment.UserId,
                                Username = user.Username,
-                               DisplayName = userProfile != null ? userProfile.DisplayName : string.Empty
+                               DisplayName = userProfile?.DisplayName ?? string.Empty,
+                               CreatedAt = comment.CreatedAt,
+                               TrackId = comment.TrackId,
+                               TrackName = track.Title
                            }).ToList();
-
-        var commentsByTrack = commentData
-            .GroupBy(c => c.TrackId)
-            .Select(g => new CommentsViewModel
-            {
-                Comments = g.Select(c => new CommentsViewModel.CommentViewModel
-                {
-                    Id = c.Id,
-                    Text = c.Comment,
-                    UserId = c.UserId,
-                    Username = c.Username,
-                    DisplayName = c.DisplayName,
-                    CreatedAt = c.CreatedAt,
-                    TrackId = c.TrackId,
-                    TrackName = c.TrackTitle
-                }).ToList()
-            }).ToList();
 
         var totalCount = _trackCommentRepository
             .GetRanged(x => x.UserId == request.UserId)
             .Count();
 
-        var paginatedTracks = new PaginatedList<CommentsViewModel>(
-            commentsByTrack,
+        var paginatedComments = new PaginatedList<CommentViewModel>(
+            commentData,
             totalCount,
             request.PageNumber,
             request.PageSize
@@ -101,7 +84,8 @@ public class GetRecentCommentsByUserQueryHandler : IRequestHandler<GetRecentComm
 
         return new GetRecentCommentsByUserQueryResponse
         {
-            Tracks = paginatedTracks
+            Tracks = paginatedComments
         };
     }
+
 }

@@ -1,8 +1,5 @@
 namespace Project.Domain.ViewModels;
 
-public record CommentsViewModel
-{
-    public List<CommentViewModel> Comments { get; set; } = [];
 
     public record CommentViewModel
     {
@@ -15,4 +12,3 @@ public record CommentsViewModel
         public Guid TrackId { get; set; }
         public string TrackName { get; set; } = string.Empty;
     }
-}

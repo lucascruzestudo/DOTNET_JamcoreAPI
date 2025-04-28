@@ -5,6 +5,6 @@ namespace Project.Application.Features.Commands.GetRecentCommentsByUser;
 
 public record GetRecentCommentsByUserQueryResponse
 {
-    public PaginatedList<CommentsViewModel> Tracks { get; set; } = default!;
+    public PaginatedList<CommentViewModel> Tracks { get; set; } = default!;
 }
 

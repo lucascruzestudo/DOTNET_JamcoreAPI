@@ -86,7 +86,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
                     from userProfile in userProfiles.DefaultIfEmpty()
                     join trackTag in _trackTagRepository.GetAll() on track.Id equals trackTag.TrackId into trackTags
                     from trackTag in trackTags.DefaultIfEmpty()
-                    join tag in _tagRepository.GetAll() on trackTag.TagId equals tag.Id into tags
+                    join tag in _tagRepository.GetAll() on trackTag?.TagId equals tag.Id into tags
                     from tag in tags.DefaultIfEmpty()
                     select new { track, user, userProfile, tag } into x
                     group x by new

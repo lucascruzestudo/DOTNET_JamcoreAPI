@@ -3,6 +3,7 @@ using Project.Domain.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.CreateTrackPlay;
+using Project.Application.Features.Queries.GetRecentTrackPlaysByUser;
 
 namespace Project.WebApi.Controllers
 {
@@ -20,6 +21,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> CreateTrackPlay([FromBody] CreateTrackPlayCommandRequest request)
         {
             return Response(await _mediatorHandler.Send(new CreateTrackPlayCommand(request)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("byUser")]
+        [SwaggerOperation(Summary = "Get recent track plays by user.")]
+        [ProducesResponseType(typeof(GetRecentTrackPlaysByUserQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetRecentTrackPlaysByUser([FromQuery] Guid userId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
+        {
+            return Response(await _mediatorHandler.Send(new GetRecentTrackPlaysByUserQuery(userId, pageNumber, pageSize)));
         }
     }
 }
