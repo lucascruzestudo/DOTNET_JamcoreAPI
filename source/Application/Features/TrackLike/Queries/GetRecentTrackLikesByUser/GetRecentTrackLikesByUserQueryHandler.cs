@@ -10,9 +10,9 @@ using Project.Domain.Interfaces.Data.Repositories;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
-namespace Project.Application.Features.Queries.GetRecentTrackPlaysByUser;
+namespace Project.Application.Features.Queries.GetRecentTrackLikesByUser;
 
-public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTrackPlaysByUserQuery, GetRecentTrackPlaysByUserQueryResponse?>
+public class GetRecentTrackLikesByUserQueryHandler : IRequestHandler<GetRecentTrackLikesByUserQuery, GetRecentTrackLikesByUserQueryResponse?>
 {
     private readonly IMediator _mediator;
     private readonly IRepositoryBase<Track> _trackRepository;
@@ -25,7 +25,7 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
 
-    public GetRecentTrackPlaysByUserQueryHandler(
+    public GetRecentTrackLikesByUserQueryHandler(
         IMediator mediator,
         IRepositoryBase<Track> trackRepository,
         IRepositoryBase<User> userRepository,
@@ -49,29 +49,29 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
         _user = user;
     }
 
-    public async Task<GetRecentTrackPlaysByUserQueryResponse?> Handle(GetRecentTrackPlaysByUserQuery request, CancellationToken cancellationToken)
+    public async Task<GetRecentTrackLikesByUserQueryResponse?> Handle(GetRecentTrackLikesByUserQuery request, CancellationToken cancellationToken)
     {
         var userValidation = _userRepository.Get(u => u.Id == request.UserId);
         if (userValidation == null)
         {
             await _mediator.Publish(
-                new DomainNotification("GetRecentTrackPlaysByUser", _localizer.Text("NotFound")),
+                new DomainNotification("GetRecentTrackLikesByUser", _localizer.Text("NotFound")),
                 cancellationToken
             );
             return default;
         }
 
-        var trackPlaysQuery = _trackPlayRepository
-            .GetRanged(tp => tp.UserId == request.UserId)
-            .GroupBy(tp => tp.TrackId)
-            .Select(g => g.OrderByDescending(tp => tp.CreatedAt).FirstOrDefault())
-            .OrderByDescending(tp => tp?.CreatedAt)
+        var trackLikesQuery = _trackLikeRepository
+            .GetRanged(tl => tl.UserId == request.UserId)
+            .GroupBy(tl => tl.TrackId)
+            .Select(g => g.OrderByDescending(tl => tl.CreatedAt).FirstOrDefault())
+            .OrderByDescending(tl => tl?.CreatedAt)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize);
 
-        var totalCount = _trackPlayRepository
-            .GetRanged(tp => tp.UserId == request.UserId)
-            .GroupBy(tp => tp.TrackId)
+        var totalCount = _trackLikeRepository
+            .GetRanged(tl => tl.UserId == request.UserId)
+            .GroupBy(tl => tl.TrackId)
             .Count();
 
         var likesByTrack = _trackLikeRepository
@@ -84,8 +84,8 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
             .GroupBy(x => x.TrackId)
             .Select(g => new { TrackId = g.Key, Count = g.Count() });
 
-        var query = from trackPlay in trackPlaysQuery
-                    join track in _trackRepository.GetAll().Where(t => t.IsPublic == true) on trackPlay.TrackId equals track.Id
+        var query = from trackLike in trackLikesQuery
+                    join track in _trackRepository.GetAll().Where(t => t.IsPublic == true) on trackLike.TrackId equals track.Id
                     join user in _userRepository.GetAll() on track.UserId equals user.Id
                     join userProfile in _userProfileRepository.GetAll() on track.UserId equals userProfile.UserId into userProfiles
                     from userProfile in userProfiles.DefaultIfEmpty()
@@ -93,7 +93,7 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
                     from trackTag in trackTags.DefaultIfEmpty()
                     join tag in _tagRepository.GetAll() on trackTag?.TagId equals tag.Id into tags
                     from tag in tags.DefaultIfEmpty()
-                    select new { track, user, userProfile, tag, trackPlay } into x
+                    select new { track, user, userProfile, tag, trackLike } into x
                     group x by new
                     {
                         x.track.Id,
@@ -110,7 +110,7 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
                             : x.user.Username ?? "Unknown",
                         x.track.Duration,
                         UpdatedAt = x.track.UpdatedAt ?? x.track.CreatedAt,
-                        PlayedAt = x.trackPlay.CreatedAt
+                        LikedAt = x.trackLike.CreatedAt
                     } into g
                     select new TrackViewModel
                     {
@@ -129,7 +129,7 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
                         PlayCount = playsByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Count ?? 0,
                         UserLikedTrack = likesByTrack.Any(l => l.TrackId == g.Key.Id && l.Likes.Any(like => like.UserId == _user.Id)),
                         Duration = g.Key.Duration,
-                        UpdatedAt = g.Key.UpdatedAt,
+                        UpdatedAt = g.Key.UpdatedAt
                     };
 
         var tracks = query.ToList();
@@ -141,11 +141,11 @@ public class GetRecentTrackPlaysByUserQueryHandler : IRequestHandler<GetRecentTr
         );
 
         await _mediator.Publish(
-            new DomainSuccessNotification("GetRecentTrackPlaysByUser", _localizer.Text("Success")),
+            new DomainSuccessNotification("GetRecentTrackLikesByUser", _localizer.Text("Success")),
             cancellationToken
         );
 
-        return new GetRecentTrackPlaysByUserQueryResponse
+        return new GetRecentTrackLikesByUserQueryResponse
         {
             Tracks = paginatedTracks
         };

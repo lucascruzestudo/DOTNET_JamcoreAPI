@@ -3,6 +3,7 @@ using Project.Domain.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.UpdateTrackLike;
+using Project.Application.Features.Queries.GetRecentTrackLikesByUser;
 
 namespace Project.WebApi.Controllers
 {
@@ -20,6 +21,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> UpdateTrackLike([FromBody] UpdateTrackLikeCommandRequest request)
         {
             return Response(await _mediatorHandler.Send(new UpdateTrackLikeCommand(request)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("byUser")]
+        [SwaggerOperation(Summary = "Get recent track likes by user.")]
+        [ProducesResponseType(typeof(GetRecentTrackLikesByUserQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetRecentTrackLikesByUser([FromQuery] Guid userId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
+        {
+            return Response(await _mediatorHandler.Send(new GetRecentTrackLikesByUserQuery(userId, pageNumber, pageSize)));
         }
     }
 }
