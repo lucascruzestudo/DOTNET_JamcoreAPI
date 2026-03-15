@@ -41,6 +41,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 app.UseAuthentication();
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 

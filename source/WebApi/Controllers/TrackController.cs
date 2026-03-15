@@ -11,6 +11,7 @@ using Project.Application.Features.Commands.GetTracksByTag;
 using Project.Application.Features.Commands.GetTracksByUser;
 using Project.Application.Features.Commands.GetRecentTracks;
 using Project.Application.Features.Commands.GetTrack;
+using Project.Application.Features.Queries.GetFeed;
 
 namespace Project.WebApi.Controllers
 {
@@ -121,6 +122,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> GetTracks([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             return Response(await _mediatorHandler.Send(new GetRecentTracksQuery(pageNumber, pageSize)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("feed")]
+        [SwaggerOperation(Summary = "Get the full feed: paginated tracks + sidebar recentPlays + recentLikes for the authenticated user.")]
+        [ProducesResponseType(typeof(GetFeedQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetFeed([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 6)
+        {
+            return Response(await _mediatorHandler.Send(new GetFeedQuery(pageNumber, pageSize)));
         }
 
         [Authorize(Roles = "Admin, User")]

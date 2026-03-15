@@ -125,6 +125,47 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                     };
 
         var tracks = query.ToList();
+
+        // Load comments for all tracks returned in this page in a single query
+        var trackIds = tracks.Select(t => t.Id).ToArray();
+
+        var commentsAll = (from comment in _trackCommentRepository.GetAll().Where(c => trackIds.Contains(c.TrackId))
+                           join user in _userRepository.GetAll() on comment.UserId equals user.Id
+                           join userProfile in _userProfileRepository.GetAll() on comment.UserId equals userProfile.UserId into profiles
+                           from userProfile in profiles.DefaultIfEmpty()
+                           select new
+                           {
+                               TrackId = comment.TrackId,
+                               Comment = new TrackViewModel.Comment
+                               {
+                                   Id = comment.Id,
+                                   Text = comment.Comment,
+                                   UserId = comment.UserId,
+                                   Username = user.Username ?? "unknown",
+                                   DisplayName = userProfile?.DisplayName ?? user.Username ?? "unknown",
+                                   UserProfilePictureUrl = userProfile?.ProfilePictureUrl ?? string.Empty,
+                                   UserProfileUpdatedAt = userProfile?.UpdatedAt ?? userProfile?.CreatedAt,
+                                   CreatedAt = comment.CreatedAt
+                               }
+                           }).ToList();
+
+        var commentsLookup = commentsAll
+            .GroupBy(c => c.TrackId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Comment).ToList());
+
+        // Attach comments to each TrackViewModel
+        foreach (var tr in tracks)
+        {
+            if (commentsLookup.TryGetValue(tr.Id, out var list))
+            {
+                tr.Comments = list;
+            }
+            else
+            {
+                tr.Comments = new System.Collections.Generic.List<TrackViewModel.Comment>();
+            }
+        }
+
         var totalCount = _trackRepository.GetRanged(x => x.IsPublic).Count();
 
         var paginatedTracks = new PaginatedList<TrackViewModel>(

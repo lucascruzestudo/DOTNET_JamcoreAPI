@@ -24,7 +24,7 @@ namespace Project.Infrastructure.Supabase
             await _supabase.InitializeAsync();
             var bucket = _supabase.Storage.From(bucketName);
 
-            var response = await bucket.Upload(fileBytes, fileName, new Supabase.Storage.FileOptions
+            var response = await bucket.Upload(fileBytes, fileName, new global::Supabase.Storage.FileOptions
             {
                 Upsert = true
             });
@@ -49,7 +49,7 @@ namespace Project.Infrastructure.Supabase
             await _supabase.InitializeAsync();
             var storage = _supabase.Storage;
             var bucket = storage.From(bucketName);
-            await bucket.Remove([fileName]);
+            await bucket.Remove(fileName);
             return true;
         }
     }

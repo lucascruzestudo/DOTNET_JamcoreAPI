@@ -52,6 +52,16 @@ public static class DependencyInjection
 
         services.AddControllers();
 
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            });
+        });
+
         services.AddHealthChecks()
             .AddDbContextCheck<ApplicationDbContext>();
 
