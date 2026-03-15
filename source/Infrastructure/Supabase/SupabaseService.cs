@@ -19,17 +19,20 @@ namespace Project.Infrastructure.Supabase
             _supabase = new Client(url!, key, options);
         }
 
-        public async Task<string> UploadFileAsync(byte[] imageBytes, string fileName, string bucketName)
+        public async Task<string> UploadFileAsync(byte[] fileBytes, string fileName, string bucketName)
         {
-
             await _supabase.InitializeAsync();
-            var storage = _supabase.Storage;
-            var bucket = storage.From(bucketName);
+            var bucket = _supabase.Storage.From(bucketName);
 
-            using var stream = new MemoryStream(imageBytes);
-            var response = await bucket.Upload(imageBytes, fileName);
-            var publicUrl = bucket.GetPublicUrl(fileName);
-            return publicUrl;
+            var response = await bucket.Upload(fileBytes, fileName, new Supabase.Storage.FileOptions
+            {
+                Upsert = true
+            });
+
+            if (string.IsNullOrEmpty(response))
+                throw new Exception($"Supabase upload returned no path for file '{fileName}' in bucket '{bucketName}'.");
+
+            return bucket.GetPublicUrl(fileName);
         }
 
         public async Task<string> GetPublicUrlAsync(string fileName, string bucketName)

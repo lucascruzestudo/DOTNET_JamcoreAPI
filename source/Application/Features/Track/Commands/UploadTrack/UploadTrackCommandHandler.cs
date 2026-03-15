@@ -8,6 +8,7 @@ using Project.Domain.Interfaces.Data.Repositories;
 using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using TagLib;
 using Tag = Project.Domain.Entities.Tag;
 
@@ -24,6 +25,7 @@ namespace Project.Application.Features.Commands.UploadTrack
         private readonly IUser _user;
         private readonly IRepositoryBase<User> _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly string _tracksBucket;
 
         public UploadTrackCommandHandler(
             IMediator mediator,
@@ -34,7 +36,8 @@ namespace Project.Application.Features.Commands.UploadTrack
             CultureLocalizer localizer,
             IUser user,
             IRepositoryBase<User> userRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IConfiguration configuration)
         {
             _mediator = mediator;
             _supabaseService = supabaseService;
@@ -45,6 +48,7 @@ namespace Project.Application.Features.Commands.UploadTrack
             _user = user;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _tracksBucket = configuration["Supabase:TracksBucket"] ?? "jamcore-tracks";
         }
 
         public async Task<UploadTrackCommandResponse?> Handle(UploadTrackCommand command, CancellationToken cancellationToken)
@@ -120,7 +124,7 @@ namespace Project.Application.Features.Commands.UploadTrack
                 if (command.Image != null)
                 {
                     string fileName = $"track_{trackId}_image.jpg";
-                    uploadedImageUrl = await _supabaseService.UploadFileAsync(command.Image, fileName, "jamcore-tracks");
+                    uploadedImageUrl = await _supabaseService.UploadFileAsync(command.Image, fileName, _tracksBucket);
 
                     if (string.IsNullOrEmpty(uploadedImageUrl))
                     {
@@ -137,7 +141,7 @@ namespace Project.Application.Features.Commands.UploadTrack
                 if (command.Track != null)
                 {
                     string audioFileName = $"track_{trackId}_audio.mp3";
-                    uploadedAudioFileUrl = await _supabaseService.UploadFileAsync(command.Track, audioFileName, "jamcore-tracks");
+                    uploadedAudioFileUrl = await _supabaseService.UploadFileAsync(command.Track, audioFileName, _tracksBucket);
 
                     if (string.IsNullOrEmpty(uploadedAudioFileUrl))
                     {

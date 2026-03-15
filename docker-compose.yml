@@ -28,6 +28,7 @@ services:
       Supabase__Url: "${SUPABASE_URL}"
       Supabase__Key: "${SUPABASE_KEY}"
       Supabase__Bucket: "${SUPABASE_BUCKET_NAME}"
+      Supabase__TracksBucket: "${SUPABASE_BUCKET_TRACKS}"
     depends_on:
       - redis
 

@@ -124,6 +124,7 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
             UserLikedTrack = likesByTrack?.Likes.Any(like => like.UserId == _user.Id) ?? false,
             Duration = track.Duration,
             Comments = comments,
+            CommentCount = comments.Count,
             UpdatedAt = track.UpdatedAt ?? track.CreatedAt
         };
 

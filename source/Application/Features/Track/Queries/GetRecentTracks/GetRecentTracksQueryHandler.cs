@@ -21,6 +21,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
     private readonly IRepositoryBase<UserProfile> _userProfileRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
+    private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
 
@@ -33,6 +34,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         IRepositoryBase<UserProfile> userProfileRepository,
         IRepositoryBase<TrackLike> trackLikeRepository,
         IRepositoryBase<TrackPlay> trackPlayRepository,
+        IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
         IUser user)
     {
@@ -44,6 +46,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         _userProfileRepository = userProfileRepository;
         _trackLikeRepository = trackLikeRepository;
         _trackPlayRepository = trackPlayRepository;
+        _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
     }
@@ -63,6 +66,11 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
             .Select(g => new { TrackId = g.Key, Likes = g.ToList() });
 
         var playsByTrack = _trackPlayRepository
+            .GetAll()
+            .GroupBy(x => x.TrackId)
+            .Select(g => new { TrackId = g.Key, Count = g.Count() });
+
+        var commentsByTrack = _trackCommentRepository
             .GetAll()
             .GroupBy(x => x.TrackId)
             .Select(g => new { TrackId = g.Key, Count = g.Count() });
@@ -110,6 +118,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                         Username = g.Key.Username,
                         LikeCount = likesByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Likes.Count ?? 0,
                         PlayCount = playsByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Count ?? 0,
+                        CommentCount = commentsByTrack.FirstOrDefault(c => c.TrackId == g.Key.Id)?.Count ?? 0,
                         UserLikedTrack = likesByTrack.Any(l => l.TrackId == g.Key.Id && l.Likes.Any(like => like.UserId == _user.Id)),
                         Duration = g.Key.Duration,
                         UpdatedAt = g.Key.UpdatedAt
