@@ -72,6 +72,7 @@ namespace Project.Application.Features.Commands.UpdateTrack
             track.Title = command.Request.Title?.Trim() ?? track.Title;
             track.Description = command.Request.Description ?? track.Description;
             track.IsPublic = command.Request.IsPublic ?? track.IsPublic;
+            track.UpdatedAt = DateTime.UtcNow;
             _trackRepository.Update(track);
             _unitOfWork.Commit();
 
@@ -106,7 +107,7 @@ namespace Project.Application.Features.Commands.UpdateTrack
 
             if (command.Image != null && command.Image.Length > 0)
             {
-                if (track.ImageFileName != null)
+                if (!string.IsNullOrWhiteSpace(track.ImageFileName))
                 {
                     await _supabaseService.DeleteFileAsync(track.ImageFileName, "jamcore-tracks");
                 }
