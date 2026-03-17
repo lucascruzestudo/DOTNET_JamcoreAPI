@@ -21,6 +21,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly IRepositoryBase<Tag> _tagRepository;
     private readonly IRepositoryBase<TrackLike> _trackLikeRepository;
     private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
+    private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
 
@@ -33,6 +34,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         IRepositoryBase<Tag> tagRepository,
         IRepositoryBase<TrackLike> trackLikeRepository,
         IRepositoryBase<TrackPlay> trackPlayRepository,
+        IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
         IUser user)
     {
@@ -44,6 +46,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         _tagRepository = tagRepository;
         _trackLikeRepository = trackLikeRepository;
         _trackPlayRepository = trackPlayRepository;
+        _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
     }
@@ -72,6 +75,11 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
             .Select(g => new { TrackId = g.Key, Likes = g.ToList() });
 
         var playsByTrack = _trackPlayRepository
+            .GetAll()
+            .GroupBy(x => x.TrackId)
+            .Select(g => new { TrackId = g.Key, Count = g.Count() });
+
+        var commentsByTrack = _trackCommentRepository
             .GetAll()
             .GroupBy(x => x.TrackId)
             .Select(g => new { TrackId = g.Key, Count = g.Count() });
@@ -118,6 +126,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
                         LikeCount = likesByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Likes.Count ?? 0,
                         PlayCount = playsByTrack.FirstOrDefault(l => l.TrackId == g.Key.Id)?.Count ?? 0,
                         UserLikedTrack = likesByTrack.Any(l => l.TrackId == g.Key.Id && l.Likes.Any(like => like.UserId == _user.Id)),
+                        CommentCount = commentsByTrack.FirstOrDefault(c => c.TrackId == g.Key.Id)?.Count ?? 0,
                         Duration = g.Key.Duration,
                         UpdatedAt = g.Key.UpdatedAt
                     };
