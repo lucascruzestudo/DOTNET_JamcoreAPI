@@ -6,12 +6,13 @@ using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.DeleteTrackComment;
 
-public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<TrackComment> trackCommentRepository, IRepositoryBase<User> userRepository, IUser user, CultureLocalizer localizer) : IRequestHandler<DeleteTrackCommentCommand, DeleteTrackCommentCommandResponse?>
+public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<TrackComment> trackCommentRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Track> trackRepository, IUser user, CultureLocalizer localizer) : IRequestHandler<DeleteTrackCommentCommand, DeleteTrackCommentCommandResponse?>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMediator _mediator = mediator;
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository = trackCommentRepository;
     private readonly IRepositoryBase<User> _userRepository = userRepository;
+    private readonly IRepositoryBase<Track> _trackRepository = trackRepository;
     private readonly IUser _user = user;
     private readonly CultureLocalizer _localizer = localizer;
 
@@ -31,10 +32,21 @@ public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator 
             return default;
         }
 
+        // Allow deletion if requester is the comment author OR the owner/uploader of the track
         if (trackComment.UserId != user.Id)
         {
-            await _mediator.Publish(new DomainNotification("DeleteTrackComment", _localizer.Text("Unauthorized")), cancellationToken);
-            return default;
+            var track = _trackRepository.Get(t => t.Id == trackComment.TrackId);
+            if (track == null)
+            {
+                await _mediator.Publish(new DomainNotification("DeleteTrackComment", _localizer.Text("NotFound")), cancellationToken);
+                return default;
+            }
+
+            if (track.UserId != user.Id)
+            {
+                await _mediator.Publish(new DomainNotification("DeleteTrackComment", _localizer.Text("Unauthorized")), cancellationToken);
+                return default;
+            }
         }
 
         var childComments = _trackCommentRepository.GetRanged(x => x.ParentCommentId == trackComment.Id);
