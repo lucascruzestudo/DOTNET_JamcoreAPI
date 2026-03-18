@@ -13,6 +13,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:80"
+      App__FrontendUrl: "${FRONTEND_URL}"
       ConnectionStrings__DefaultConnection: "Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SSL Mode=Require;Trust Server Certificate=true;"
       Redis__Connection: "${REDIS_CONNECTION}"
       RabbitMQ__Connection: "${RABBITMQ_CONNECTION}"

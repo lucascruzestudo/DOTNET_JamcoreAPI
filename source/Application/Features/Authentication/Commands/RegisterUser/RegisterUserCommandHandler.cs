@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Project.Application.Common.Localizers;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
@@ -6,13 +7,14 @@ using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.RegisterUser
 {
-    public class RegisterUserCommandHandler(IUserRepository userRepository, IMediator mediator, CultureLocalizer localizer, IRedisService redisService, IEmailService emailService) : IRequestHandler<RegisterUserCommand, RegisterUserCommandResponse?>
+    public class RegisterUserCommandHandler(IUserRepository userRepository, IMediator mediator, CultureLocalizer localizer, IRedisService redisService, IEmailService emailService, IConfiguration configuration) : IRequestHandler<RegisterUserCommand, RegisterUserCommandResponse?>
     {
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IMediator _mediator = mediator;
         private readonly CultureLocalizer _localizer = localizer;
         private readonly IRedisService _redisService = redisService;
         private readonly IEmailService _emailService = emailService;
+        private readonly IConfiguration _configuration = configuration;
 
         public async Task<RegisterUserCommandResponse?> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
         {
@@ -21,7 +23,8 @@ namespace Project.Application.Features.Commands.RegisterUser
             var tokenInfo = $"{command.Request.Email};{User.HashPassword(command.Request.Password)};{command.Request.Username}";
             await _redisService.SetAsync(token, tokenInfo, TimeSpan.FromMinutes(expirationMinutes));
 
-            var confirmationUrl = $"http://localhost:5173/confirmaccount/{token}";
+            var frontendUrl = _configuration["App:FrontendUrl"] ?? "http://localhost:5173";
+            var confirmationUrl = $"{frontendUrl}/confirmaccount/{token}";
 
             var subject = _localizer.Text("ConfirmEmailSubject");
             var bodyContent = _localizer.Text("ConfirmEmailBody", command.Request.Username, confirmationUrl, expirationMinutes);
