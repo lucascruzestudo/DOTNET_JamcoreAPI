@@ -20,8 +20,14 @@ RUN dotnet publish -c Release -o /out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
+# Install Redis
+RUN apt-get update && apt-get install -y redis-server && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /out .
+
+# Create entrypoint script
+RUN echo '#!/bin/bash\nredis-server --daemonize yes\ndotnet Project.WebApi.dll' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 EXPOSE 5000
 
-ENTRYPOINT ["dotnet", "Project.WebApi.dll"]
+ENTRYPOINT ["/app/entrypoint.sh"]
