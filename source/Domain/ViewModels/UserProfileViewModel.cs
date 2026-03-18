@@ -10,4 +10,6 @@ public record UserProfileViewModel
     public string ProfilePictureUrl { get; set; } = string.Empty;
     public float Volume { get; set; } = 1.0f;
     public DateTime UpdatedAt { get; set; }
+    public int FollowerCount { get; set; }
+    public int FollowingCount { get; set; }
 }

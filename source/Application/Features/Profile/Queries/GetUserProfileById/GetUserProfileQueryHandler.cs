@@ -13,16 +13,18 @@ public class GetUserProfileByIdQueryHandler : IRequestHandler<GetUserProfileById
     private readonly IMediator _mediator;
     private readonly IRepositoryBase<User> _userRepository;
     private readonly IRepositoryBase<UserProfile> _userProfileRepository;
+    private readonly IRepositoryBase<UserFollow> _userFollowRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
 
-    public GetUserProfileByIdQueryHandler(IMediator mediator, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IUser user, IRepositoryBase<UserProfile> userProfileRepository)
+    public GetUserProfileByIdQueryHandler(IMediator mediator, IRepositoryBase<User> userRepository, CultureLocalizer localizer, IUser user, IRepositoryBase<UserProfile> userProfileRepository, IRepositoryBase<UserFollow> userFollowRepository)
     {
         _mediator = mediator;
         _userRepository = userRepository;
         _localizer = localizer;
         _user = user;
         _userProfileRepository = userProfileRepository;
+        _userFollowRepository = userFollowRepository;
     }
 
     public async Task<GetUserProfileByIdQueryResponse?> Handle(GetUserProfileByIdQuery request, CancellationToken cancellationToken)
@@ -42,6 +44,9 @@ public class GetUserProfileByIdQueryHandler : IRequestHandler<GetUserProfileById
             return default;
         }
 
+        var followerCount = _userFollowRepository.GetRanged(x => x.FollowedUserId == user.Id).Count();
+        var followingCount = _userFollowRepository.GetRanged(x => x.FollowerUserId == user.Id).Count();
+
         var responseViewModel = new UserProfileViewModel
         {
             Id = user.Id,
@@ -51,7 +56,9 @@ public class GetUserProfileByIdQueryHandler : IRequestHandler<GetUserProfileById
             Location = profile.Location ?? string.Empty,
             ProfilePictureUrl = profile.ProfilePictureUrl ?? string.Empty,
             Volume = profile.Volume,
-            UpdatedAt = profile.UpdatedAt ?? profile.CreatedAt
+            UpdatedAt = profile.UpdatedAt ?? profile.CreatedAt,
+            FollowerCount = followerCount,
+            FollowingCount = followingCount,
         }; 
 
         await _mediator.Publish(new DomainSuccessNotification("GetUserProfileById", _localizer.Text("Success")), cancellationToken);

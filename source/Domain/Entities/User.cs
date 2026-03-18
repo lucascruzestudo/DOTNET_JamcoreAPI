@@ -12,6 +12,8 @@ namespace Project.Domain.Entities
         public virtual ICollection<TrackPlay> PlayedTracks { get; set; } = [];
         public virtual ICollection<TrackComment> UserComments { get; set; } = [];
         public virtual ICollection<UserProfileComment> UserProfileComments { get; set; } = [];
+        public virtual ICollection<UserFollow> Following { get; set; } = [];
+        public virtual ICollection<UserFollow> Followers { get; set; } = [];
 
 
         private User( ) { }
