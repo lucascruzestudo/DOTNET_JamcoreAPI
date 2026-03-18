@@ -77,12 +77,7 @@ public class EmailService : IEmailService
             HtmlBody = body,
         };
 
-        var response = await _resend.EmailSendAsync(emailMessage);
-        
-        if (!response.Successful)
-        {
-            throw new InvalidOperationException($"Resend API error: {response.Error}");
-        }
+        await _resend.EmailSendAsync(emailMessage);
     }
 
     private async Task SendViaSmtpAsync(string to, string subject, string body)
