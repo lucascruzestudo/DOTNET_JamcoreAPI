@@ -5,6 +5,7 @@ using Project.Domain.Interfaces.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
+using Resend;
 
 namespace Project.Infrastructure.Email;
 
@@ -12,12 +13,16 @@ public class EmailService : IEmailService
 {
     private readonly EmailSettings _emailSettings;
     private readonly SmtpClient _smtpClient;
+    private readonly IResend _resend;
     private readonly ILogger<EmailService> _logger;
+    private readonly bool _useResend;
 
-    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
+    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger, IResend resend)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
+        _resend = resend;
+        _useResend = !string.IsNullOrEmpty(_emailSettings.ResendApiKey);
 
         _smtpClient = new SmtpClient(_emailSettings.Server)
         {
@@ -37,16 +42,15 @@ public class EmailService : IEmailService
             string template = await GetEmbeddedResourceContentAsync(resourceName);
             string body = template.Replace("{{bodyContent}}", bodyContent);
 
-            var mailMessage = new MailMessage
+            if (_useResend)
             {
-                From = new MailAddress(_emailSettings.Username),
-                Subject = "ProjectAPI - " + subject,
-                Body = body,
-                IsBodyHtml = true,
-            };
-            mailMessage.To.Add(to);
+                await SendViaResendAsync(to, subject, body);
+            }
+            else
+            {
+                await SendViaSmtpAsync(to, subject, body);
+            }
 
-            await _smtpClient.SendMailAsync(mailMessage);
             _logger.LogInformation("Email sent successfully to {To}", to);
         }
         catch (SmtpException ex)
@@ -61,6 +65,38 @@ public class EmailService : IEmailService
         {
             _logger.LogWarning(ex, "Unexpected error sending email to {To}. Subject: {Subject}", to, subject);
         }
+    }
+
+    private async Task SendViaResendAsync(string to, string subject, string body)
+    {
+        var emailMessage = new EmailMessage()
+        {
+            From = _emailSettings.ResendFromEmail,
+            To = to,
+            Subject = "ProjectAPI - " + subject,
+            HtmlBody = body,
+        };
+
+        var response = await _resend.EmailSendAsync(emailMessage);
+        
+        if (!response.Successful)
+        {
+            throw new InvalidOperationException($"Resend API error: {response.Error}");
+        }
+    }
+
+    private async Task SendViaSmtpAsync(string to, string subject, string body)
+    {
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress(_emailSettings.Username),
+            Subject = "ProjectAPI - " + subject,
+            Body = body,
+            IsBodyHtml = true,
+        };
+        mailMessage.To.Add(to);
+
+        await _smtpClient.SendMailAsync(mailMessage);
     }
 
     private static async Task<string> GetEmbeddedResourceContentAsync(string resourceName)

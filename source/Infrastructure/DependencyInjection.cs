@@ -12,6 +12,7 @@ using Project.Domain.Interfaces.Services;
 using Project.Infrastructure.Email;
 using Project.Infrastructure.Cache;
 using Project.Infrastructure.Supabase;
+using Resend;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -60,6 +61,16 @@ public static class DependencyInjection
         });
 
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
+
+        var resendApiKey = configuration.GetSection("Email")["ResendApiKey"];
+        if (!string.IsNullOrEmpty(resendApiKey))
+        {
+            services.AddSingleton<IResend>(ResendClient.Create(resendApiKey));
+        }
+        else
+        {
+            services.AddSingleton<IResend>(sp => null!);
+        }
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
