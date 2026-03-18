@@ -12,6 +12,7 @@ using Project.Application.Features.Commands.GetTracksByUser;
 using Project.Application.Features.Commands.GetRecentTracks;
 using Project.Application.Features.Commands.GetTrack;
 using Project.Application.Features.Queries.GetFeed;
+using Project.Application.Features.Commands.SearchTracks;
 
 namespace Project.WebApi.Controllers
 {
@@ -158,6 +159,15 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> GetTrack([FromRoute] Guid id)
         {
             return Response(await _mediatorHandler.Send(new GetTrackQuery(id)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("search")]
+        [SwaggerOperation(Summary = "Search public tracks by title, description, username or tag.")]
+        [ProducesResponseType(typeof(SearchTracksQueryResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> SearchTracks([FromQuery] string q, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            return Response(await _mediatorHandler.Send(new SearchTracksQuery(q, pageNumber, pageSize)));
         }
     }
 }
