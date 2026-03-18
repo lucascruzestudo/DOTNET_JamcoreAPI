@@ -33,6 +33,11 @@ namespace Project.Infrastructure.Data.Configurations
             builder.Property(up => up.ProfilePictureUrl)
                    .HasColumnName("TX_PROFILEPICTUREURL");
 
+            builder.Property(up => up.Volume)
+                   .HasColumnName("NM_VOLUME")
+                   .HasDefaultValue(1.0f)
+                   .IsRequired();
+
             builder.HasOne(up => up.User)
                    .WithOne(u => u.UserProfile)
                    .HasForeignKey<UserProfile>(up => up.UserId)

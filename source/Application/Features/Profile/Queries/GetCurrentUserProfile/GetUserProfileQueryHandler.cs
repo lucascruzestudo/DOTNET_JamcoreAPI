@@ -50,6 +50,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, G
             Bio = profile.Bio ?? string.Empty,
             Location = profile.Location ?? string.Empty,
             ProfilePictureUrl = profile.ProfilePictureUrl ?? string.Empty,
+            Volume = profile.Volume,
             UpdatedAt = profile.UpdatedAt ?? profile.CreatedAt
         }; 
 

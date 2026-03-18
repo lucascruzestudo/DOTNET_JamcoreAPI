@@ -5,6 +5,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.UpsertProfile;
 using Project.Application.Features.Commands.GetUserProfile;
 using Project.Application.Features.Commands.GetUserProfileById;
+using Project.Application.Features.Commands.UpdateUserVolume;
 
 namespace Project.WebApi.Controllers;
 
@@ -52,6 +53,15 @@ public class ProfileController(INotificationHandler<DomainNotification> notifica
     public async Task<IActionResult> GetUserProfileById(Guid id)
     {
         return Response(await _mediatorHandler.Send(new GetUserProfileByIdQuery(id)));
+    }
+
+    [Authorize(Roles = "Admin, User")]
+    [HttpPatch("volume")]
+    [SwaggerOperation(Summary = "Update the authenticated user's saved volume (0.0 – 1.0).")]
+    [ProducesResponseType(typeof(UpdateUserVolumeCommandResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateVolume([FromBody] float volume)
+    {
+        return Response(await _mediatorHandler.Send(new UpdateUserVolumeCommand(volume)));
     }
 
 }

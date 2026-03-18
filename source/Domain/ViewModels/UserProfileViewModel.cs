@@ -8,5 +8,6 @@ public record UserProfileViewModel
     public string Bio { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public string ProfilePictureUrl { get; set; } = string.Empty;
+    public float Volume { get; set; } = 1.0f;
     public DateTime UpdatedAt { get; set; }
 }

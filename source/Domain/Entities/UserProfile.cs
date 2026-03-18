@@ -9,6 +9,7 @@ namespace Project.Domain.Entities
         public string? Bio { get; set; }
         public string? Location { get; set; }
         public string? ProfilePictureUrl { get; set; }
+        public float Volume { get; set; } = 1.0f;
         public virtual ICollection<UserProfileComment> UserProfileComments { get; set; } = [];
 
 
