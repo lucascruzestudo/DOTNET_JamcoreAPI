@@ -24,7 +24,7 @@ namespace Project.Application.Features.Commands.RegisterUser
             await _redisService.SetAsync(token, tokenInfo, TimeSpan.FromMinutes(expirationMinutes));
 
             var frontendUrl = _configuration["App:FrontendUrl"] ?? "http://localhost:5173";
-            var confirmationUrl = $"{frontendUrl}/confirmaccount/{token}";
+            var confirmationUrl = $"{frontendUrl}/#/confirmaccount/{token}";
 
             var subject = _localizer.Text("ConfirmEmailSubject");
             var bodyContent = _localizer.Text("ConfirmEmailBody", command.Request.Username, confirmationUrl, expirationMinutes);
