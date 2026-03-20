@@ -130,7 +130,7 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
             Description = track.Description,
             CreatedAt = track.CreatedAt,
             ImageUrl = track.ImageUrl,
-            AudioFileUrl = $"/Track/{track.Id}/stream",
+            AudioFileUrl = track.AudioFileUrl,
             Tags = tags,
             UserId = track.UserId,
             Username = username,

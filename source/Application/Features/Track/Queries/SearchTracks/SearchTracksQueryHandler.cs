@@ -174,7 +174,7 @@ public class SearchTracksQueryHandler : IRequestHandler<SearchTracksQuery, Searc
                        Description = g.Key.Description,
                        CreatedAt = g.Key.CreatedAt,
                        ImageUrl = g.Key.ImageUrl,
-                       AudioFileUrl = $"/Track/{g.Key.Id}/stream",
+                       AudioFileUrl = g.Key.AudioFileUrl,
                        Tags = g.Where(x => x.tag != null && !string.IsNullOrEmpty(x.tag.Name))
                                 .Select(x => x.tag!.Name).Distinct().ToArray(),
                        UserId = g.Key.UserId,
