@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Project.Infrastructure.Data;
 using Project.Infrastructure.Data.Seeds;
 using Project.WebApi.Configurations;
@@ -73,21 +76,43 @@ app.Use(async (context, next) =>
 
 app.UseHttpsRedirection();
 
-app.UseRateLimiter();
 app.UseRouting();
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseSwaggerConfiguration();
+    app.UseSwaggerConfiguration();
 
-app.UseExceptionHandler(options => { });
+    // Temporary: return exception details in JSON so we can debug production issues.
+    // Remove or secure this before returning to normal production behavior.
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
 
-app.Map("/", () => app.Environment.IsProduction()
-    ? Results.Ok(new { status = "healthy" })
-    : Results.Redirect("/swagger"));
+            var feature = context.Features.Get<IExceptionHandlerFeature>();
+            var ex = feature?.Error;
+
+            var payload = new
+            {
+                error = ex?.Message,
+                exception = ex?.GetType().FullName,
+                stackTrace = ex?.StackTrace
+            };
+
+            var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+            await context.Response.WriteAsync(json);
+        });
+    });
+
+    app.Map("/", () => app.Environment.IsProduction()
+        ? Results.Ok(new { status = "healthy" })
+        : Results.Redirect("/swagger"));
 
 app.Run();
 
