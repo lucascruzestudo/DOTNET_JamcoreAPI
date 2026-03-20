@@ -47,5 +47,15 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(t => t.IsDeleted)
                 .HasColumnName("FL_DELETED")
                 .IsRequired();
+
+        // Auth lookups and SearchTracks: Username filter
+        builder.HasIndex(u => u.Username)
+                .IsUnique()
+                .HasDatabaseName("IX_USER_USERNAME");
+
+        // Auth lookups by email (login / confirm account)
+        builder.HasIndex(u => u.Email)
+                .IsUnique()
+                .HasDatabaseName("IX_USER_EMAIL");
     }
 }

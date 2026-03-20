@@ -66,6 +66,22 @@ namespace Project.Infrastructure.Data.Configurations
                             .HasForeignKey(tc => tc.ParentCommentId)
                             .HasConstraintName("FK_TRACKCOMMENT_PARENT")
                             .OnDelete(DeleteBehavior.NoAction);
+
+                     // GroupBy TrackId aggregation used in every feed/track query
+                     builder.HasIndex(tc => tc.TrackId)
+                            .HasDatabaseName("IX_TRACKCOMMENT_TRACKID");
+
+                     // Ordered comment loading per track (thread pagination)
+                     builder.HasIndex(tc => new { tc.TrackId, tc.CreatedAt })
+                            .HasDatabaseName("IX_TRACKCOMMENT_TRACKID_CREATEDAT");
+
+                     // User's own comments lookup
+                     builder.HasIndex(tc => tc.UserId)
+                            .HasDatabaseName("IX_TRACKCOMMENT_USERID");
+
+                     // Loading replies for a given parent comment
+                     builder.HasIndex(tc => tc.ParentCommentId)
+                            .HasDatabaseName("IX_TRACKCOMMENT_PARENTCOMMENTID");
               }
        }
 }

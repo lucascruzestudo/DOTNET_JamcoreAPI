@@ -41,17 +41,17 @@ namespace Project.Infrastructure.Data.Configurations
                             .HasConstraintName("FK_TRACKPLAY_TRACK")
                             .OnDelete(DeleteBehavior.Cascade);
 
-                     builder.HasIndex(tl => new { tl.UserId, tl.TrackId })
-                                 .HasDatabaseName("IX_TRACKPLAY_USERID_TRACKID");
+                     // Recent plays query: WHERE UserId = x GROUP BY TrackId, MAX(CreatedAt) DESC
+                     builder.HasIndex(tl => new { tl.UserId, tl.TrackId, tl.CreatedAt })
+                                 .HasDatabaseName("IX_TRACKPLAY_USERID_TRACKID_CREATEDAT");
 
+                     // Single-column fallback for UserId-only filters
                      builder.HasIndex(tl => tl.UserId)
                             .HasDatabaseName("IX_TRACKPLAY_USERID");
 
+                     // GroupBy TrackId aggregation (total play counts per track)
                      builder.HasIndex(tl => tl.TrackId)
                             .HasDatabaseName("IX_TRACKPLAY_TRACKID");
-
-                     builder.HasIndex(tl => tl.CreatedAt)
-                            .HasDatabaseName("IX_TRACKPLAY_CREATEDAT");
               }
        }
 }

@@ -36,14 +36,15 @@ namespace Project.Infrastructure.Data.Configurations
                             .HasConstraintName("FK_TRACKLIKE_TRACK")
                             .OnDelete(DeleteBehavior.Cascade);
 
+                     // Recent likes: WHERE UserId = x
                      builder.HasIndex(tl => tl.UserId)
-                     .HasDatabaseName("IX_TrackLike_UserId");
+                            .HasDatabaseName("IX_TRACKLIKE_USERID");
 
+                     // GroupBy TrackId aggregation (like counts per track)
                      builder.HasIndex(tl => tl.TrackId)
                             .HasDatabaseName("IX_TRACKLIKE_TRACKID");
 
-                     builder.HasIndex(tl => new { tl.UserId, tl.TrackId })
-                            .HasDatabaseName("IX_TRACKLIKE_USERID_TRACKID");
+                     // (UserId, TrackId) duplicates the composite PK — omitted to avoid redundant write overhead
               }
        }
 }

@@ -36,14 +36,15 @@ namespace Project.Infrastructure.Data.Configurations
                 .HasConstraintName("FK_USERFOLLOW_FOLLOWED")
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // "Who does user X follow?" — most common query direction
             builder.HasIndex(uf => uf.FollowerUserId)
                 .HasDatabaseName("IX_USERFOLLOW_FOLLOWERUSERID");
 
+            // "Who follows user X?" — used in follower counts
             builder.HasIndex(uf => uf.FollowedUserId)
                 .HasDatabaseName("IX_USERFOLLOW_FOLLOWEDUSERID");
 
-            builder.HasIndex(uf => new { uf.FollowerUserId, uf.FollowedUserId })
-                .HasDatabaseName("IX_USERFOLLOW_FOLLOWER_FOLLOWED");
+            // (FollowerUserId, FollowedUserId) duplicates the composite PK — omitted to avoid redundant write overhead
         }
     }
 }

@@ -53,6 +53,15 @@ namespace Project.Infrastructure.Data.Configurations
             builder.Property(up => up.IsDeleted)
                    .HasColumnName("FL_DELETED")
                    .IsRequired();
+
+            // 1-to-1: every query joins UserProfile by UserId
+            builder.HasIndex(up => up.UserId)
+                   .IsUnique()
+                   .HasDatabaseName("IX_USERPROFILE_USERID");
+
+            // SearchTracks: DisplayName.Contains(term)
+            builder.HasIndex(up => up.DisplayName)
+                   .HasDatabaseName("IX_USERPROFILE_DISPLAYNAME");
         }
     }
 }

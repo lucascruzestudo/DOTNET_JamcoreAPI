@@ -75,8 +75,17 @@ namespace Project.Infrastructure.Data.Configurations
                             .HasConstraintName("FK_TRACK_USER")
                             .OnDelete(DeleteBehavior.Cascade);
 
+                     // Feed & RecentTracks: WHERE IsPublic ORDER BY CreatedAt DESC
                      builder.HasIndex(t => new { t.IsPublic, t.CreatedAt })
                                    .HasDatabaseName("IX_TRACK_ISPUBLIC_CREATEDAT");
+
+                     // GetTracksByUser: WHERE UserId = x AND IsPublic ORDER BY CreatedAt DESC
+                     builder.HasIndex(t => new { t.UserId, t.IsPublic, t.CreatedAt })
+                                   .HasDatabaseName("IX_TRACK_USERID_ISPUBLIC_CREATEDAT");
+
+                     // Generic user track lookups / joins
+                     builder.HasIndex(t => t.UserId)
+                                   .HasDatabaseName("IX_TRACK_USERID");
               }
        }
 }

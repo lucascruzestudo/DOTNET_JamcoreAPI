@@ -32,12 +32,13 @@ namespace Project.Infrastructure.Data.Configurations
                             .HasConstraintName("FK_TRACKTAG_TAG")
                             .OnDelete(DeleteBehavior.Cascade);
 
-                     builder.HasIndex(tt => new { tt.TrackId, tt.TagId })
-                                 .HasDatabaseName("IX_TRACK_TAGS_TRACKID_TAGID");
+                     // (TrackId, TagId) duplicates the composite PK — omitted to avoid redundant write overhead
 
+                     // GetTrack / JoinTrackData: WHERE TrackId = x
                      builder.HasIndex(tt => tt.TrackId)
                             .HasDatabaseName("IX_TRACK_TAGS_TRACKID");
 
+                     // GetTracksByTag: WHERE TagId = x
                      builder.HasIndex(tt => tt.TagId)
                             .HasDatabaseName("IX_TRACK_TAGS_TAGID");
               }
