@@ -165,7 +165,6 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
             CreatedAt = r.CreatedAt,
             ImageUrl = r.ImageUrl,
             AudioFileUrl = r.AudioFileUrl,
-            AudioFileName = r.AudioFileName,
             Tags = r.Tags,
             UserId = r.UserId,
             Username = r.Username,
@@ -194,7 +193,6 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
             CreatedAt = r.CreatedAt,
             ImageUrl = r.ImageUrl,
             AudioFileUrl = r.AudioFileUrl,
-            AudioFileName = r.AudioFileName,
             Tags = r.Tags,
             UserId = r.UserId,
             Username = r.Username,
@@ -231,7 +229,6 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
                     x.track.CreatedAt,
                     x.track.ImageUrl,
                     x.track.AudioFileUrl,
-                    x.track.AudioFileName,
                     x.track.UserId,
                     Username = x.userProfile != null && !string.IsNullOrEmpty(x.userProfile.DisplayName)
                         ? x.userProfile.DisplayName!
@@ -246,7 +243,6 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
                     g.Key.CreatedAt,
                     g.Key.ImageUrl,
                     g.Key.AudioFileUrl,
-                    g.Key.AudioFileName,
                     g.Key.UserId,
                     g.Key.Username,
                     g.Key.Duration,
@@ -259,7 +255,7 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
     private record TrackRaw(
         Guid Id, string Title, string Description,
         DateTime CreatedAt, string ImageUrl,
-        string AudioFileUrl, string AudioFileName,
+        string AudioFileUrl,
         Guid UserId, string Username, string Duration,
         DateTime UpdatedAt, string[] Tags);
 }

@@ -101,9 +101,7 @@ public class GetRecentTrackLikesByUserQueryHandler : IRequestHandler<GetRecentTr
                         x.track.Description,
                         x.track.CreatedAt,
                         x.track.ImageUrl,
-                        x.track.ImageFileName,
                         x.track.AudioFileUrl,
-                        x.track.AudioFileName,
                         x.track.UserId,
                         Username = x.userProfile != null && !string.IsNullOrEmpty(x.userProfile.DisplayName)
                             ? x.userProfile.DisplayName
@@ -119,9 +117,7 @@ public class GetRecentTrackLikesByUserQueryHandler : IRequestHandler<GetRecentTr
                         Description = g.Key.Description,
                         CreatedAt = g.Key.CreatedAt,
                         ImageUrl = g.Key.ImageUrl,
-                        ImageFileName = g.Key.ImageFileName,
                         AudioFileUrl = g.Key.AudioFileUrl,
-                        AudioFileName = g.Key.AudioFileName,
                         Tags = g.Where(x => x.tag != null).Select(x => x.tag.Name).Distinct().ToArray(),
                         UserId = g.Key.UserId,
                         Username = g.Key.Username,

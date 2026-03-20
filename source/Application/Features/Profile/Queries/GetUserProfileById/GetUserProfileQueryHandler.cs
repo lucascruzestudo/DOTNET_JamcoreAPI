@@ -55,7 +55,7 @@ public class GetUserProfileByIdQueryHandler : IRequestHandler<GetUserProfileById
             Bio = profile.Bio ?? string.Empty,
             Location = profile.Location ?? string.Empty,
             ProfilePictureUrl = profile.ProfilePictureUrl ?? string.Empty,
-            Volume = profile.Volume,
+            // Volume is a personal playback preference — intentionally omitted for public profiles
             UpdatedAt = profile.UpdatedAt ?? profile.CreatedAt,
             FollowerCount = followerCount,
             FollowingCount = followingCount,

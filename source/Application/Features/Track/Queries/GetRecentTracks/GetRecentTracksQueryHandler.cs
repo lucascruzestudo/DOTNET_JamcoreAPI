@@ -107,9 +107,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                         x.track.Description,
                         x.track.CreatedAt,
                         x.track.ImageUrl,
-                        x.track.ImageFileName,
                         x.track.AudioFileUrl,
-                        x.track.AudioFileName,
                         x.track.UserId,
                         Username = x.userProfile != null && !string.IsNullOrEmpty(x.userProfile.DisplayName)
                             ? x.userProfile.DisplayName
@@ -125,7 +123,6 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                         CreatedAt = g.Key.CreatedAt,
                         ImageUrl = g.Key.ImageUrl,
                         AudioFileUrl = g.Key.AudioFileUrl,
-                        AudioFileName = g.Key.AudioFileName,
                         Tags = g.Where(x => x.tag != null && !string.IsNullOrEmpty(x.tag.Name))
                                 .Select(x => x.tag.Name)
                                 .Distinct()

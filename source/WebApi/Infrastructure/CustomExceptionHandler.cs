@@ -30,8 +30,12 @@ public class CustomExceptionHandler : IExceptionHandler
             return true;
         }
 
+        // Never expose raw exception details to clients — internal info could leak
+        // connection strings, table names, file paths, or stack traces.
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        await httpContext.Response.WriteAsJsonAsync(ResponseBase<object>.Failure(exception.Message), cancellationToken: cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(
+            ResponseBase<object>.Failure("An unexpected error occurred. Please try again later."),
+            cancellationToken: cancellationToken);
 
         return true;
     }
