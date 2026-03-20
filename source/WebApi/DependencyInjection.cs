@@ -43,6 +43,22 @@ public static class DependencyInjection
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                 RoleClaimType = ClaimTypes.Role
             };
+            // Allow audio/video elements to pass the JWT via query string
+            // because browser media elements cannot set Authorization headers.
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        context.HttpContext.Request.Path.StartsWithSegments("/api/v1/Track") &&
+                        context.HttpContext.Request.Path.Value!.EndsWith("/stream"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         services.AddScoped<IUser, CurrentUser>();

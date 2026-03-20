@@ -1,11 +1,11 @@
 ﻿namespace Project.Application.Common.Models;
 
-public class PaginatedList<T>(IReadOnlyCollection<T> items, int count, int pageNumber, int pageSize)
+public class PaginatedList<T>(IReadOnlyCollection<T> items, int totalCount, int pageNumber, int pageSize)
 {
     public IReadOnlyCollection<T> Items { get; } = items;
     public int PageNumber { get; } = pageNumber;
-    public int TotalPages { get; } = (int)Math.Ceiling(count / (double)pageSize);
-    public int TotalCount { get; } = count;
+    public int TotalPages { get; } = (int)Math.Ceiling(totalCount / (double)pageSize);
+    public int TotalCount { get; } = totalCount;
 
     public bool HasPreviousPage => PageNumber > 1;
 
