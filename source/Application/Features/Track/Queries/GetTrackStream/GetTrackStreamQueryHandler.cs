@@ -30,7 +30,7 @@ public class GetTrackStreamQueryHandler : IRequestHandler<GetTrackStreamQuery, G
         _mediator = mediator;
         _user = user;
         _localizer = localizer;
-        _bucketName = configuration["Supabase:Bucket"]!;
+        _bucketName = configuration["Supabase:TracksBucket"]!;
     }
 
     public async Task<GetTrackStreamQueryResponse?> Handle(GetTrackStreamQuery request, CancellationToken cancellationToken)
