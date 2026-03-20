@@ -2,6 +2,7 @@ using Project.Application.Common.Interfaces;
 using Project.Application.Common.Localizers;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.UnfollowUser;
@@ -13,7 +14,8 @@ public class UnfollowUserCommandHandler(
     IRepositoryBase<User> userRepository,
     IRepositoryBase<UserProfile> userProfileRepository,
     IUser user,
-    CultureLocalizer localizer) : IRequestHandler<UnfollowUserCommand, UnfollowUserCommandResponse?>
+    CultureLocalizer localizer,
+    IRedisService redis) : IRequestHandler<UnfollowUserCommand, UnfollowUserCommandResponse?>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMediator _mediator = mediator;
@@ -22,6 +24,7 @@ public class UnfollowUserCommandHandler(
     private readonly IRepositoryBase<UserProfile> _userProfileRepository = userProfileRepository;
     private readonly IUser _user = user;
     private readonly CultureLocalizer _localizer = localizer;
+    private readonly IRedisService _redis = redis;
 
     public async Task<UnfollowUserCommandResponse?> Handle(UnfollowUserCommand command, CancellationToken cancellationToken)
     {
@@ -49,6 +52,12 @@ public class UnfollowUserCommandHandler(
 
         _userFollowRepository.Delete(existingFollow);
         _unitOfWork.Commit();
+
+        await Task.WhenAll(
+            _redis.DeleteByPrefixAsync($"follow:followers:{targetProfile.UserId}:"),
+            _redis.DeleteByPrefixAsync($"follow:following:{currentUser.Id}:"),
+            _redis.DeleteAsync($"follow:is:{currentUser.Id}:{targetProfile.UserId}")
+        );
 
         await _mediator.Publish(new DomainSuccessNotification("UnfollowUser", _localizer.Text("Success")), cancellationToken);
         return new UnfollowUserCommandResponse { IsFollowing = false };

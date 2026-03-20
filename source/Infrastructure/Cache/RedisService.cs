@@ -91,5 +91,41 @@ public class RedisService(IConnectionMultiplexer redis, ILogger<RedisService> lo
             _logger.LogWarning(ex, "Unexpected error in Redis DeleteAsync for key: {Key}. Cache deletion skipped.", key);
         }
     }
+
+    public async Task DeleteByPrefixAsync(string prefix)
+    {
+        try
+        {
+            if (!redis.IsConnected)
+            {
+                _logger.LogWarning("Redis is not connected. Skipping prefix deletion for prefix: {Prefix}", prefix);
+                return;
+            }
+
+            var endpoints = redis.GetEndPoints();
+            if (endpoints.Length == 0) return;
+
+            var server = redis.GetServer(endpoints[0]);
+            var keys = server.Keys(pattern: $"{prefix}*").ToArray();
+
+            if (keys.Length > 0)
+            {
+                await _database.KeyDeleteAsync(keys);
+                _logger.LogDebug("Redis: deleted {Count} keys with prefix '{Prefix}'.", keys.Length, prefix);
+            }
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogWarning(ex, "Redis operation timeout for prefix: {Prefix}. Cache deletion skipped.", prefix);
+        }
+        catch (RedisConnectionException ex)
+        {
+            _logger.LogWarning(ex, "Redis connection error for prefix: {Prefix}. Cache deletion skipped.", prefix);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Unexpected error in Redis DeleteByPrefixAsync for prefix: {Prefix}. Cache deletion skipped.", prefix);
+        }
+    }
 }
 

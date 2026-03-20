@@ -50,8 +50,11 @@ public static class SwaggerConfigurations
 
     public static WebApplication UseSwaggerConfiguration(this WebApplication app)
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "Project API"));
+        if (!app.Environment.IsProduction())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "Project API"));
+        }
 
         return app;
     }

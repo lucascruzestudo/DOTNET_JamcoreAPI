@@ -16,6 +16,7 @@ public class CustomExceptionHandler : IExceptionHandler
                 { typeof(NotFoundException), HandleNotFoundException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
                 { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
+                { typeof(IdempotencyException), HandleIdempotencyException },
             };
     }
 
@@ -65,5 +66,12 @@ public class CustomExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
 
         await httpContext.Response.WriteAsJsonAsync(ResponseBase<object>.Failure("Forbidden"));
+    }
+
+    private async Task HandleIdempotencyException(HttpContext httpContext, Exception ex)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+
+        await httpContext.Response.WriteAsJsonAsync(ResponseBase<object>.Failure(ex.Message));
     }
 }

@@ -6,9 +6,11 @@ using Project.Domain.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Annotations;
 using Project.Application.Features.Commands.ConfirmUser;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Project.WebApi.Controllers
 {
+    [EnableRateLimiting("auth")]
     public class AuthenticationController(INotificationHandler<DomainNotification> notifications,
                           INotificationHandler<DomainSuccessNotification> successNotifications,
                           IHttpContextAccessor httpContextAccessor,

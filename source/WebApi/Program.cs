@@ -37,11 +37,27 @@ app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocal
 
 app.UseHealthChecks("/health");
 
+// Security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    if (app.Environment.IsProduction())
+    {
+        context.Response.Headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload";
+    }
+    await next();
+});
+
 app.UseHttpsRedirection();
 
+app.UseRateLimiter();
 app.UseRouting();
 app.UseAuthentication();
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
@@ -51,7 +67,9 @@ app.UseSwaggerConfiguration();
 
 app.UseExceptionHandler(options => { });
 
-app.Map("/", () => Results.Redirect("/swagger"));
+app.Map("/", () => app.Environment.IsProduction()
+    ? Results.Ok(new { status = "healthy" })
+    : Results.Redirect("/swagger"));
 
 app.Run();
 

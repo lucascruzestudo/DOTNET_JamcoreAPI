@@ -26,6 +26,8 @@ namespace Project.Application.Features.Commands.UploadTrack
         private readonly IRepositoryBase<User> _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly string _tracksBucket;
+        private readonly IRedisService _redis;
+        private readonly IAudioService _audioService;
 
         public UploadTrackCommandHandler(
             IMediator mediator,
@@ -37,7 +39,9 @@ namespace Project.Application.Features.Commands.UploadTrack
             IUser user,
             IRepositoryBase<User> userRepository,
             IUnitOfWork unitOfWork,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IRedisService redis,
+            IAudioService audioService)
         {
             _mediator = mediator;
             _supabaseService = supabaseService;
@@ -49,6 +53,8 @@ namespace Project.Application.Features.Commands.UploadTrack
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _tracksBucket = configuration["Supabase:TracksBucket"] ?? "jamcore-tracks";
+            _redis = redis;
+            _audioService = audioService;
         }
 
         public async Task<UploadTrackCommandResponse?> Handle(UploadTrackCommand command, CancellationToken cancellationToken)
@@ -140,8 +146,10 @@ namespace Project.Application.Features.Commands.UploadTrack
 
                 if (command.Track != null)
                 {
+                    var audioToUpload = await _audioService.CompressAsync(command.Track);
+
                     string audioFileName = $"track_{trackId}_audio.mp3";
-                    uploadedAudioFileUrl = await _supabaseService.UploadFileAsync(command.Track, audioFileName, _tracksBucket);
+                    uploadedAudioFileUrl = await _supabaseService.UploadFileAsync(audioToUpload, audioFileName, _tracksBucket);
 
                     if (string.IsNullOrEmpty(uploadedAudioFileUrl))
                     {
@@ -152,7 +160,7 @@ namespace Project.Application.Features.Commands.UploadTrack
                     track.AudioFileUrl = uploadedAudioFileUrl;
                     track.AudioFileName = uploadedAudioFileName;
                     
-                    using (var stream = new MemoryStream(command.Track))
+                    using (var stream = new MemoryStream(audioToUpload))
                     {
                         var audioFile = TagLib.File.Create(new StreamFileAbstraction(audioFileName, stream, stream));
                         var duration = audioFile.Properties.Duration;
@@ -167,6 +175,15 @@ namespace Project.Application.Features.Commands.UploadTrack
                 }
 
                 await _mediator.Publish(new DomainSuccessNotification("UploadTrack", _localizer.Text("Success")), cancellationToken);
+
+                // ── Invalidate caches affected by new track ──────────────────────────────
+                await Task.WhenAll(
+                    _redis.DeleteByPrefixAsync("tracks:recent:"),
+                    _redis.DeleteByPrefixAsync($"tracks:user:{user.Id}:"),
+                    _redis.DeleteByPrefixAsync("tracks:tag:"),
+                    _redis.DeleteByPrefixAsync("tracks:search:"),
+                    _redis.DeleteByPrefixAsync("feed:")
+                );
 
                 return new UploadTrackCommandResponse
                 {

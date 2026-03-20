@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
@@ -24,6 +26,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRedisService _redis;
 
     public GetRecentTracksQueryHandler(
         IMediator mediator,
@@ -36,7 +39,8 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         IRepositoryBase<TrackPlay> trackPlayRepository,
         IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
-        IUser user)
+        IUser user,
+        IRedisService redis)
     {
         _mediator = mediator;
         _trackRepository = trackRepository;
@@ -49,10 +53,22 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
         _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
+        _redis = redis;
     }
 
     public async Task<GetRecentTracksQueryResponse?> Handle(GetRecentTracksQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = $"tracks:recent:{request.PageNumber}:{request.PageSize}";
+        var cached = await _redis.GetAsync<GetRecentTracksQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<GetRecentTracksQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("GetRecentTracks", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
 
         var tracksQuery = _trackRepository
             .GetRanged(x => x.IsPublic)
@@ -180,9 +196,8 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
             cancellationToken
         );
 
-        return new GetRecentTracksQueryResponse
-        {
-            Tracks = paginatedTracks
-        };
+        var response = new GetRecentTracksQueryResponse { Tracks = paginatedTracks };
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(5));
+        return response;
     }
 }

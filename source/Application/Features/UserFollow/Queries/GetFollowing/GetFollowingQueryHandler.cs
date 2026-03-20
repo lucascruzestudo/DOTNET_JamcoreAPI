@@ -2,8 +2,10 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
+using System.Text.Json;
 
 namespace Project.Application.Features.Commands.GetFollowing;
 
@@ -12,16 +14,30 @@ public class GetFollowingQueryHandler(
     IRepositoryBase<UserFollow> userFollowRepository,
     IRepositoryBase<User> userRepository,
     IRepositoryBase<UserProfile> userProfileRepository,
-    CultureLocalizer localizer) : IRequestHandler<GetFollowingQuery, GetFollowingQueryResponse?>
+    CultureLocalizer localizer,
+    IRedisService redis) : IRequestHandler<GetFollowingQuery, GetFollowingQueryResponse?>
 {
     private readonly IMediator _mediator = mediator;
     private readonly IRepositoryBase<UserFollow> _userFollowRepository = userFollowRepository;
     private readonly IRepositoryBase<User> _userRepository = userRepository;
     private readonly IRepositoryBase<UserProfile> _userProfileRepository = userProfileRepository;
     private readonly CultureLocalizer _localizer = localizer;
+    private readonly IRedisService _redis = redis;
 
     public async Task<GetFollowingQueryResponse?> Handle(GetFollowingQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = $"follow:following:{request.UserId}:{request.PageNumber}:{request.PageSize}";
+        var cached = await _redis.GetAsync<GetFollowingQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<GetFollowingQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("GetFollowing", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
+
         // Accepts User.Id or UserProfile.Id
         var targetProfile = _userProfileRepository.Get(x => x.UserId == request.UserId || x.Id == request.UserId);
         if (targetProfile == null)
@@ -60,6 +76,8 @@ public class GetFollowingQueryHandler(
         var paginated = new PaginatedList<UserFollowViewModel>(data, totalCount, request.PageNumber, request.PageSize);
 
         await _mediator.Publish(new DomainSuccessNotification("GetFollowing", _localizer.Text("Success")), cancellationToken);
-        return new GetFollowingQueryResponse { Following = paginated };
+        var response = new GetFollowingQueryResponse { Following = paginated };
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(5));
+        return response;
     }
 }

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
@@ -24,6 +26,7 @@ public class SearchTracksQueryHandler : IRequestHandler<SearchTracksQuery, Searc
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRedisService _redis;
 
     public SearchTracksQueryHandler(
         IMediator mediator,
@@ -36,7 +39,8 @@ public class SearchTracksQueryHandler : IRequestHandler<SearchTracksQuery, Searc
         IRepositoryBase<TrackPlay> trackPlayRepository,
         IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
-        IUser user)
+        IUser user,
+        IRedisService redis)
     {
         _mediator = mediator;
         _trackRepository = trackRepository;
@@ -49,12 +53,25 @@ public class SearchTracksQueryHandler : IRequestHandler<SearchTracksQuery, Searc
         _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
+        _redis = redis;
     }
 
     public async Task<SearchTracksQueryResponse?> Handle(SearchTracksQuery request, CancellationToken cancellationToken)
     {
         var currentUserId = _user.Id;
         var term = request.Search.Trim().ToLower();
+        var cacheKey = $"tracks:search:{term}:{request.PageNumber}:{request.PageSize}";
+
+        var cached = await _redis.GetAsync<SearchTracksQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<SearchTracksQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("SearchTracks", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
 
         // ── Tags that match the search term ─────────────────────────────────
         var matchingTagIds = _tagRepository
@@ -179,6 +196,8 @@ public class SearchTracksQueryHandler : IRequestHandler<SearchTracksQuery, Searc
             cancellationToken
         );
 
-        return new SearchTracksQueryResponse { Tracks = paginatedTracks };
+        var response = new SearchTracksQueryResponse { Tracks = paginatedTracks };
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(2));
+        return response;
     }
 }

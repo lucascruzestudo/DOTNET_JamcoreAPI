@@ -12,6 +12,7 @@ using Project.Domain.Interfaces.Services;
 using Project.Infrastructure.Email;
 using Project.Infrastructure.Cache;
 using Project.Infrastructure.Supabase;
+using Project.Infrastructure.Audio;
 using Resend;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -82,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IRedisService, RedisService>();
         services.AddScoped<ISupabaseService, SupabaseService>();
+        services.AddScoped<IAudioService, AudioService>();
 
         services.AddAuthorizationBuilder();
 

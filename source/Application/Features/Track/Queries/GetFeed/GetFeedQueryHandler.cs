@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
@@ -24,6 +26,7 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRedisService _redis;
 
     public GetFeedQueryHandler(
         IMediator mediator,
@@ -36,7 +39,8 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
         IRepositoryBase<TrackPlay> trackPlayRepository,
         IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
-        IUser user)
+        IUser user,
+        IRedisService redis)
     {
         _mediator = mediator;
         _trackRepository = trackRepository;
@@ -49,11 +53,24 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
         _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
+        _redis = redis;
     }
 
     public async Task<GetFeedQueryResponse?> Handle(GetFeedQuery request, CancellationToken cancellationToken)
     {
         var currentUserId = _user.Id;
+        var cacheKey = $"feed:{currentUserId}:{request.PageNumber}:{request.PageSize}";
+
+        var cached = await _redis.GetAsync<GetFeedQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<GetFeedQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("GetFeed", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
 
         // ── Materialized aggregates ───────────────────────────────────────────
         var likeAggs = _trackLikeRepository
@@ -120,12 +137,16 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, GetFeedQueryRes
             cancellationToken
         );
 
-        return new GetFeedQueryResponse
+        var response = new GetFeedQueryResponse
         {
             Tracks = paginatedTracks,
             RecentPlays = recentPlays,
             RecentLikes = recentLikes,
         };
+
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(2));
+
+        return response;
     }
 
     private List<TrackViewModel> ProjectTracks(

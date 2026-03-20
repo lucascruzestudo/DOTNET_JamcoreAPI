@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
@@ -23,6 +25,7 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
     private readonly IRepositoryBase<TrackPlay> _trackPlayRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRedisService _redis;
 
     public GetTracksByTagQueryHandler(
         IMediator mediator,
@@ -34,7 +37,8 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
         IRepositoryBase<TrackLike> trackLikeRepository,
         IRepositoryBase<TrackPlay> trackPlayRepository,
         CultureLocalizer localizer,
-        IUser user)
+        IUser user,
+        IRedisService redis)
     {
         _mediator = mediator;
         _trackRepository = trackRepository;
@@ -46,10 +50,24 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
         _trackPlayRepository = trackPlayRepository;
         _localizer = localizer;
         _user = user;
+        _redis = redis;
     }
 
     public async Task<GetTracksByTagQueryResponse?> Handle(GetTracksByTagQuery request, CancellationToken cancellationToken)
     {
+        var tagNorm = request.Tag.ToLower().Trim();
+        var cacheKey = $"tracks:tag:{tagNorm}:{request.PageNumber}:{request.PageSize}";
+        var cached = await _redis.GetAsync<GetTracksByTagQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<GetTracksByTagQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("GetTracksByTag", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
+
         var matchingTag = _tagRepository.Get(x => x.Name == request.Tag);
         if (matchingTag == null)
         {
@@ -144,9 +162,8 @@ public class GetTracksByTagQueryHandler : IRequestHandler<GetTracksByTagQuery, G
             cancellationToken
         );
 
-        return new GetTracksByTagQueryResponse
-        {
-            Tracks = paginatedTracks
-        };
+        var response = new GetTracksByTagQueryResponse { Tracks = paginatedTracks };
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(5));
+        return response;
     }
 }

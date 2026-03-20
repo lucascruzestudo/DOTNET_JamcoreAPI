@@ -2,11 +2,12 @@ using Project.Application.Common.Interfaces;
 using Project.Application.Common.Localizers;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.UpdateTrackLike;
 
-public class UpdateTrackLikeCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<TrackLike> trackLikeRepository, IRepositoryBase<User> userRepository, IUser user, CultureLocalizer localizer) : IRequestHandler<UpdateTrackLikeCommand, UpdateTrackLikeCommandResponse?>
+public class UpdateTrackLikeCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<TrackLike> trackLikeRepository, IRepositoryBase<User> userRepository, IUser user, CultureLocalizer localizer, IRedisService redis) : IRequestHandler<UpdateTrackLikeCommand, UpdateTrackLikeCommandResponse?>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMediator _mediator = mediator;
@@ -14,6 +15,7 @@ public class UpdateTrackLikeCommandHandler(IUnitOfWork unitOfWork, IMediator med
     private readonly IRepositoryBase<User> _userRepository = userRepository;
     private readonly IUser _user = user;
     private readonly CultureLocalizer _localizer = localizer;
+    private readonly IRedisService _redis = redis;
 
     public async Task<UpdateTrackLikeCommandResponse?> Handle(UpdateTrackLikeCommand request, CancellationToken cancellationToken)
     {
@@ -44,6 +46,13 @@ public class UpdateTrackLikeCommandHandler(IUnitOfWork unitOfWork, IMediator med
         _unitOfWork.Commit();
 
         await _mediator.Publish(new DomainSuccessNotification("UpdateTrackLike", _localizer.Text("Success")), cancellationToken);
+
+        // Invalidate track detail + current user's personalized feed (has UserLikedTrack)
+        await Task.WhenAll(
+            _redis.DeleteAsync($"track:{request.Request.TrackId}"),
+            _redis.DeleteByPrefixAsync($"feed:{user.Id}:")
+        );
+
         var response = new UpdateTrackLikeCommandResponse { };
         return response;    
     }

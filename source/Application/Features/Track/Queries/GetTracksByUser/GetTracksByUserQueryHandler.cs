@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
@@ -24,6 +26,7 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRedisService _redis;
 
     public GetTracksByUserQueryHandler(
         IMediator mediator,
@@ -36,7 +39,8 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         IRepositoryBase<TrackPlay> trackPlayRepository,
         IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
-        IUser user)
+        IUser user,
+        IRedisService redis)
     {
         _mediator = mediator;
         _trackRepository = trackRepository;
@@ -49,10 +53,23 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
         _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
+        _redis = redis;
     }
 
     public async Task<GetTracksByUserQueryResponse?> Handle(GetTracksByUserQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = $"tracks:user:{request.Id}:{request.PageNumber}:{request.PageSize}";
+        var cached = await _redis.GetAsync<GetTracksByUserQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<GetTracksByUserQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("GetTracksByUser", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
+
         var userValidation = _userRepository.Get(u => u.Id == request.Id);
         if (userValidation == null)
         {
@@ -148,9 +165,8 @@ public class GetTracksByUserQueryHandler : IRequestHandler<GetTracksByUserQuery,
             cancellationToken
         );
 
-        return new GetTracksByUserQueryResponse
-        {
-            Tracks = paginatedTracks
-        };
+        var response = new GetTracksByUserQueryResponse { Tracks = paginatedTracks };
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(5));
+        return response;
     }
 }

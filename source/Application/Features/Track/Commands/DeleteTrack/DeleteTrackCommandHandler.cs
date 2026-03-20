@@ -22,6 +22,7 @@ namespace Project.Application.Features.Commands.DeleteTrack
         private readonly IUser _user;
         private readonly IRepositoryBase<User> _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRedisService _redis;
 
         public DeleteTrackCommandHandler(
             IMediator mediator,
@@ -32,7 +33,8 @@ namespace Project.Application.Features.Commands.DeleteTrack
             CultureLocalizer localizer,
             IUser user,
             IRepositoryBase<User> userRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IRedisService redis)
         {
             _mediator = mediator;
             _supabaseService = supabaseService;
@@ -43,6 +45,7 @@ namespace Project.Application.Features.Commands.DeleteTrack
             _user = user;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _redis = redis;
         }
 
         public async Task<DeleteTrackCommandResponse?> Handle(DeleteTrackCommand command, CancellationToken cancellationToken)
@@ -83,6 +86,17 @@ namespace Project.Application.Features.Commands.DeleteTrack
             _unitOfWork.Commit();
 
             await _mediator.Publish(new DomainSuccessNotification("DeleteTrack", _localizer.Text("Success")), cancellationToken);
+
+            // ── Invalidate caches affected by deleted track ──────────────────────────
+            await Task.WhenAll(
+                _redis.DeleteAsync($"track:{track.Id}"),
+                _redis.DeleteByPrefixAsync("tracks:recent:"),
+                _redis.DeleteByPrefixAsync($"tracks:user:{user.Id}:"),
+                _redis.DeleteByPrefixAsync("tracks:tag:"),
+                _redis.DeleteByPrefixAsync("tracks:search:"),
+                _redis.DeleteByPrefixAsync("feed:")
+            );
+
             return new DeleteTrackCommandResponse { };
         }
     }

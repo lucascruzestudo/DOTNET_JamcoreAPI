@@ -2,11 +2,12 @@ using Project.Application.Common.Interfaces;
 using Project.Application.Common.Localizers;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 
 namespace Project.Application.Features.Commands.DeleteTrackComment;
 
-public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<TrackComment> trackCommentRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Track> trackRepository, IUser user, CultureLocalizer localizer) : IRequestHandler<DeleteTrackCommentCommand, DeleteTrackCommentCommandResponse?>
+public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator mediator, IRepositoryBase<TrackComment> trackCommentRepository, IRepositoryBase<User> userRepository, IRepositoryBase<Track> trackRepository, IUser user, CultureLocalizer localizer, IRedisService redis) : IRequestHandler<DeleteTrackCommentCommand, DeleteTrackCommentCommandResponse?>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMediator _mediator = mediator;
@@ -15,6 +16,7 @@ public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator 
     private readonly IRepositoryBase<Track> _trackRepository = trackRepository;
     private readonly IUser _user = user;
     private readonly CultureLocalizer _localizer = localizer;
+    private readonly IRedisService _redis = redis;
 
     public async Task<DeleteTrackCommentCommandResponse?> Handle(DeleteTrackCommentCommand command, CancellationToken cancellationToken)
     {
@@ -61,6 +63,13 @@ public class DeleteTrackCommentCommandHandler(IUnitOfWork unitOfWork, IMediator 
         _unitOfWork.Commit();
 
         await _mediator.Publish(new DomainSuccessNotification("DeleteTrackComment", _localizer.Text("Success")), cancellationToken);
+
+        // Invalidate track detail + comment author's recent comments
+        await Task.WhenAll(
+            _redis.DeleteAsync($"track:{trackComment.TrackId}"),
+            _redis.DeleteByPrefixAsync($"comments:user:{trackComment.UserId}:")
+        );
+
         return new DeleteTrackCommentCommandResponse { };
     }
 

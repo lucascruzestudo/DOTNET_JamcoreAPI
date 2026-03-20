@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Project.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using Project.Application.Common.Localizers;
 using Project.Application.Common.Models;
 using Project.Domain.Entities;
 using Project.Domain.Interfaces.Data.Repositories;
+using Project.Domain.Interfaces.Services;
 using Project.Domain.Notifications;
 using Project.Domain.ViewModels;
 
@@ -25,6 +27,7 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
     private readonly IRepositoryBase<TrackComment> _trackCommentRepository;
     private readonly CultureLocalizer _localizer;
     private readonly IUser _user;
+    private readonly IRedisService _redis;
 
     public GetTrackQueryHandler(
         IUnitOfWork unitOfWork,
@@ -38,7 +41,8 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
         IRepositoryBase<TrackPlay> trackPlayRepository,
         IRepositoryBase<TrackComment> trackCommentRepository,
         CultureLocalizer localizer,
-        IUser user)
+        IUser user,
+        IRedisService redis)
     {
         _unitOfWork = unitOfWork;
         _mediator = mediator;
@@ -52,10 +56,23 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
         _trackCommentRepository = trackCommentRepository;
         _localizer = localizer;
         _user = user;
+        _redis = redis;
     }
 
     public async Task<GetTrackQueryResponse?> Handle(GetTrackQuery request, CancellationToken cancellationToken)
     {
+        var cacheKey = $"track:{request.TrackId}";
+        var cached = await _redis.GetAsync<GetTrackQueryResponse>(cacheKey);
+        if (cached != null)
+        {
+            var cachedResult = JsonSerializer.Deserialize<GetTrackQueryResponse>(cached);
+            if (cachedResult != null)
+            {
+                await _mediator.Publish(new DomainSuccessNotification("GetTrack", _localizer.Text("Success")), cancellationToken);
+                return cachedResult;
+            }
+        }
+
         var track = _trackRepository.Get(x => x.Id == request.TrackId);
         if (track == null)
         {
@@ -134,9 +151,8 @@ public class GetTrackQueryHandler : IRequestHandler<GetTrackQuery, GetTrackQuery
             new DomainSuccessNotification("GetTrack", _localizer.Text("Success")),
             cancellationToken);
 
-        return new GetTrackQueryResponse
-        {
-            Track = trackResponse
-        };
+        var response = new GetTrackQueryResponse { Track = trackResponse };
+        await _redis.SetAsync(cacheKey, response, TimeSpan.FromMinutes(5));
+        return response;
     }
 }
