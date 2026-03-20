@@ -75,9 +75,8 @@ app.UseHttpsRedirection();
 
 app.UseRateLimiter();
 app.UseRouting();
-app.UseAuthentication();
 app.UseCors("AllowFrontend");
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
