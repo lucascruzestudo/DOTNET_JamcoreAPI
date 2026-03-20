@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Project.WebApi.Controllers
 {
     [EnableRateLimiting("auth")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class AuthenticationController(INotificationHandler<DomainNotification> notifications,
                           INotificationHandler<DomainSuccessNotification> successNotifications,
                           IHttpContextAccessor httpContextAccessor,

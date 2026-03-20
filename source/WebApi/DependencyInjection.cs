@@ -96,6 +96,7 @@ public static class DependencyInjection
             options.OnRejected = async (context, cancellationToken) =>
             {
                 context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                context.HttpContext.Response.ContentType = "application/json";
                 context.HttpContext.Response.Headers.RetryAfter =
                     context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
                         ? ((int)retryAfter.TotalSeconds).ToString()
