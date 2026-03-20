@@ -44,6 +44,18 @@ namespace Project.Infrastructure.Supabase
             return bucket.GetPublicUrl(fileName);
         }
 
+        public async Task<string> GetSignedUrlAsync(string fileName, string bucketName, int expiresIn)
+        {
+            await _supabase.InitializeAsync();
+            var bucket = _supabase.Storage.From(bucketName);
+            var signedUrl = await bucket.CreateSignedUrl(fileName, expiresIn);
+
+            if (string.IsNullOrEmpty(signedUrl))
+                throw new Exception($"Failed to generate signed URL for '{fileName}' in bucket '{bucketName}'.");
+
+            return signedUrl;
+        }
+
         public async Task<bool> DeleteFileAsync(string fileName, string bucketName)
         {
             await _supabase.InitializeAsync();

@@ -13,6 +13,7 @@ using Project.Application.Features.Commands.GetRecentTracks;
 using Project.Application.Features.Commands.GetTrack;
 using Project.Application.Features.Queries.GetFeed;
 using Project.Application.Features.Commands.SearchTracks;
+using Project.Application.Features.Queries.GetTrackStream;
 
 namespace Project.WebApi.Controllers
 {
@@ -150,6 +151,19 @@ namespace Project.WebApi.Controllers
         public async Task<IActionResult> GetTracksByUser(string id, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             return Response(await _mediatorHandler.Send(new GetTracksByUserQuery(Guid.Parse(id), pageNumber, pageSize)));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("{id}/stream")]
+        [SwaggerOperation(Summary = "Get a short-lived signed URL to stream a track's audio.")]
+        [ProducesResponseType(StatusCodes.Status302Found)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> StreamTrack([FromRoute] Guid id)
+        {
+            var result = await _mediatorHandler.Send(new GetTrackStreamQuery(id));
+            if (result == null) return Response(result);
+            return Redirect(result.SignedUrl);
         }
 
         [Authorize(Roles = "Admin, User")]

@@ -122,7 +122,7 @@ public class GetRecentTracksQueryHandler : IRequestHandler<GetRecentTracksQuery,
                         Description = g.Key.Description,
                         CreatedAt = g.Key.CreatedAt,
                         ImageUrl = g.Key.ImageUrl,
-                        AudioFileUrl = g.Key.AudioFileUrl,
+                        AudioFileUrl = $"/Track/{g.Key.Id}/stream",
                         Tags = g.Where(x => x.tag != null && !string.IsNullOrEmpty(x.tag.Name))
                                 .Select(x => x.tag.Name)
                                 .Distinct()
