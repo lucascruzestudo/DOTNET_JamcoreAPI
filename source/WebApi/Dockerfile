@@ -20,19 +20,13 @@ RUN dotnet publish -c Release -o /out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Install Redis, ffmpeg and curl for health checks
-RUN apt-get update && apt-get install -y redis-server ffmpeg curl && rm -rf /var/lib/apt/lists/*
+# Install ffmpeg for audio processing
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user to run the application
 RUN groupadd -r appgroup && useradd -r -g appgroup -s /sbin/nologin appuser
 
-# Create Redis data directory with proper ownership
-RUN mkdir -p /app/redis-data && chown -R appuser:appgroup /app
-
 COPY --from=build /out .
-
-# Create entrypoint script that starts Redis on localhost:6379 and waits for it
-RUN printf '#!/bin/bash\nset -e\necho "Starting Redis on localhost:6379..."\nredis-server --daemonize yes --logfile /app/redis.log --loglevel notice --port 6379 --bind 127.0.0.1 --dir /app/redis-data --dbfilename dump.rdb\necho "Waiting for Redis to be ready on localhost:6379..."\nfor i in {1..30}; do\n  if redis-cli -h 127.0.0.1 -p 6379 ping > /dev/null 2>&1; then\n    echo "Redis is ready on localhost:6379!"\n    break\n  fi\n  echo "Attempt $i: Redis not ready, waiting..."\n  sleep 1\ndone\necho "Starting .NET API on port 5000..."\nexec dotnet Project.WebApi.dll' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Ensure the app files are owned by the non-root user
 RUN chown -R appuser:appgroup /app
@@ -40,7 +34,6 @@ RUN chown -R appuser:appgroup /app
 # Switch to non-root user
 USER appuser
 
-# Redis internal port (not exposed outside container), API port
 EXPOSE 5000
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["dotnet", "Project.WebApi.dll"]

@@ -48,12 +48,7 @@ namespace Project.Infrastructure.Supabase
         {
             await _supabase.InitializeAsync();
             var bucket = _supabase.Storage.From(bucketName);
-            var signedUrl = await bucket.CreateSignedUrl(fileName, expiresIn);
-
-            if (string.IsNullOrEmpty(signedUrl))
-                throw new Exception($"Failed to generate signed URL for '{fileName}' in bucket '{bucketName}'.");
-
-            return signedUrl;
+            return await bucket.CreateSignedUrl(fileName, expiresIn);
         }
 
         public async Task<bool> DeleteFileAsync(string fileName, string bucketName)
@@ -61,7 +56,7 @@ namespace Project.Infrastructure.Supabase
             await _supabase.InitializeAsync();
             var storage = _supabase.Storage;
             var bucket = storage.From(bucketName);
-            await bucket.Remove(fileName);
+            await bucket.Remove([fileName]);
             return true;
         }
     }
